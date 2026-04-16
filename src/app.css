@@ -1,0 +1,72 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+}
+
+.app-shell {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.topbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #30363d;
+  background: #111827;
+}
+
+.brand {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.route-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.route-nav a {
+  text-decoration: none;
+  color: #9ca3af;
+  font-size: 12px;
+  border: 1px solid #374151;
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.route-nav a.active,
+.route-nav a:hover {
+  color: #ffffff;
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, 0.2);
+}
+
+.viewer-wrap {
+  min-height: 0;
+}
+
+.legacy-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #0d1117;
+}
