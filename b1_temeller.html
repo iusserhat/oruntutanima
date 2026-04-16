@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bölüm 1 · ML Temelleri — Örüntü Tanıma</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <nav>
+    <div class="logo">📚 Örüntü Tanıma</div>
+    <a href="index.html">Ana Sayfa</a>
+    <a href="b1_temeller.html" class="active">1 · Temeller</a>
+    <a href="b2_veri.html">2 · Veri İşleme</a>
+    <a href="b3_regresyon.html">3 · Regresyon</a>
+    <a href="b4_knn.html">4 · KNN</a>
+    <a href="b5_metrikler.html">5 · Metrikler</a>
+    <a href="b6_dtree.html">6 · Decision Tree</a>
+    <a href="b7_wavelet.html">7 · Wavelet</a>
+    <a href="b8_kod.html">8 · Kod</a>
+    <a href="sinav.html">🎯 Sınav</a>
+    <a href="sorular.html">📝 Sorular</a>
+  </nav>
+
+  <div class="page-header">
+    <div class="header-badge">🧠 Bölüm 1 · 1. Hafta · 18/02/2026</div>
+    <h1>Makine Öğrenmesi Temelleri</h1>
+    <p class="subtitle">Supervised vs Unsupervised, Feature/Sample farkı, Feature Extraction & Selection, Korelasyon &
+      Kovaryans ve ML Pipeline.</p>
+    <div class="meta">
+      <div class="meta-item">📄 Kaynak: <span>1.jpeg — Not sayfası 18.02.2026</span></div>
+      <div class="meta-item">⏱ Okuma: <span>~25 dk</span></div>
+      <div class="meta-item">🎯 Sınav: <span>🟡 Orta – Supervised vs Unsupervised farkı, Feature/Sample tanımı</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">Bu Bölümde</div>
+      <a href="#tanim">ML Nedir?</a>
+      <a href="#supervised">Supervised Learning</a>
+      <a href="#unsupervised">Unsupervised Learning</a>
+      <a href="#feature-sample">Feature vs Sample</a>
+      <a href="#extraction">Feature Extraction</a>
+      <a href="#selection">Feature Selection</a>
+      <a href="#korelasyon">Korelasyon & Kovaryans</a>
+      <a href="#pipeline">ML Pipeline</a>
+      <a href="#ornekler">Gerçek Dünya Örnekleri</a>
+    </aside>
+
+    <main class="content">
+
+      <h2 id="tanim">🎯 Makine Öğrenmesi Nedir?</h2>
+      <p>
+        Makine öğrenmesi (Machine Learning), <strong>mevcut veri üzerinden tahmin yapılmasını sağlayan</strong>
+        bir yapay zeka dalıdır. Model eğitildikten sonra yeni örneklerin tahmini yapılabilir.
+      </p>
+
+      <div class="callout">
+        Analoji: Bir çocuğa düzinelerce kedi fotoğrafı gösterirseniz, &ldquo;kedi&rdquo; kavramını öğrenir ve
+        yeni bir fotoğrafta kediyi tanır. Makine öğrenmesi de tam budur — örneklerden öğrenme.
+      </div>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">📌</div>
+        <div class="alert-body">
+          <div class="alert-title">Genel Pipeline</div>
+          Veri Temizleme → Algoritma Seçimi → Model Eğitimi → Yeni Örnekleri Tahmin Etme
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="supervised">📋 Supervised Learning (Denetimli Öğrenme)</h2>
+      <p>Veriler <strong>etiketlidir</strong> (her satırın bir sınıf/class değeri vardır). Model bu etiketlerden
+        öğrenir.</p>
+      <ul>
+        <li><strong>Regresyon:</strong> Tahmin edilecek değer süreklidir (continuous) → ör: ev fiyatı, CO₂ emisyonu</li>
+        <li><strong>Classification (Sınıflandırma):</strong> Tahmin edilecek değer ayrıktır (discrete) → ör:
+          kadın/erkek, evet/hayır</li>
+        <li>Kontrol <strong>fazladır</strong>, değerlendirme metodu <strong>fazladır</strong> (R², MSE, F1 vs.)</li>
+      </ul>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">📌</div>
+        <div class="alert-body">
+          <div class="alert-title">Supervised Örnekleri</div>
+          CO₂ emisyon tahmini, kanser tespiti, ilaç önerisi (8 feature: yaş, gender, BP…), banka kredisi onayı, churn
+          tahmini, spam filtresi, el yazısı tanıma (handwriting → her harf bir sınıf), biometric identification.
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="unsupervised">🔓 Unsupervised Learning (Denetimsiz Öğrenme)</h2>
+      <p>Veriler <strong>etiketsizdir</strong> (class yok). Model kendi başına örüntüleri keşfeder.</p>
+      <ul>
+        <li><strong>Clustering (Kümeleme):</strong> Benzer verileri gruplar → K-means algoritması</li>
+        <li>Kontrol <strong>azdır</strong>, değerlendirme metodu <strong>azdır</strong></li>
+        <li>Çıktıda "doğru/yanlış" yoktur — veri kendiliğinden gruplandırılır</li>
+        <li><strong>Öneri sistemleri (Recommendation):</strong> Netflix, Amazon</li>
+      </ul>
+
+      <div class="alert alert-warn">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <div class="alert-title">Çok Önemli Kural</div>
+          Tahmin edilen değer <strong>sürekli (continuous)</strong> → Regresyon |
+          Tahmin edilen değer <strong>ayrık (discrete)</strong> → Classification
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="feature-sample">📊 Feature (Özellik) vs Sample (Örnek)</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Kavram</th>
+              <th>Ne Demek?</th>
+              <th>Örnek</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Feature (Özellik)</strong></td>
+              <td>Sütun — her bir bağımsız değişken</td>
+              <td>enginesize, cylinders, fuelconsumption</td>
+            </tr>
+            <tr>
+              <td><strong>Sample (Örnek / Data Object)</strong></td>
+              <td>Satır — tek bir veri noktası</td>
+              <td>Bir arabanın tüm özellikleri = 1 satır</td>
+            </tr>
+            <tr>
+              <td><strong>Bağımsız Değişken</strong></td>
+              <td>Modele girdi olan feature(lar)</td>
+              <td>enginesize</td>
+            </tr>
+            <tr>
+              <td><strong>Bağımlı Değişken</strong></td>
+              <td>Tahmin edilmek istenen değer</td>
+              <td>CO₂ emisyonu</td>
+            </tr>
+            <tr>
+              <td><strong>Class / Label</strong></td>
+              <td>Sınıflandırmada çıktı değeri</td>
+              <td>Drug A, B, C / Evet / Hayır</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">📌</div>
+        <div class="alert-body">
+          <div class="alert-title">CO₂ Veri Seti Örneği</div>
+          4 feature: enginesize, cylinders, fuelconsumption, CO₂emission. 3 tanesi bağımsız, 1 tanesi (CO₂) bağımlı.
+          <strong>Regresyon kullanılır</strong> çünkü: değer hesaplanıyor + çıktı continuous.
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="extraction">🔬 Feature Extraction (Özellik Çıkarma)</h2>
+      <p>
+        Görüntü, ses veya metin gibi veriler sayısal değil. Bilgisayarın anlayabileceği sayısal forma
+        dönüştürülmesi gerekir. Bu işleme <strong>Feature Extraction</strong> denir.
+      </p>
+      <ul>
+        <li>Bir resim → piksel değerleri (0-255)</li>
+        <li>Bir ses → frekans değerleri</li>
+        <li>Metin → Word embedding vektörleri</li>
+      </ul>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">📌</div>
+        <div class="alert-body">
+          <div class="alert-title">Feature Extraction vs Feature Selection</div>
+          <strong>Feature Extraction</strong> → Sayısal olmayan veriyi sayısala çevirme<br />
+          <strong>Feature Selection</strong> → Elde edilen özellikler arasından en iyilerini seçme
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="selection">✂️ Feature Selection (Özellik Seçimi)</h2>
+      <p>Çok fazla feature çalışmayı yavaşlatır ve bazıları gereksizdir. 2 yöntemle yapılır:</p>
+
+      <h3>1) Korelasyon ile Eleme</h3>
+      <p>Birbirleriyle yüksek korelasyonlu özelliklerden biri silinir. f6 ve f4 çok benzer davranıyorsa birini atmak
+        mantıklıdır — ikisi de aynı bilgiyi sağlar.</p>
+
+      <h3>2) Benzerlik / Dissimilarity (Benzersizlik)</h3>
+      <p>Veriler nümerik ise iki veri arasındaki fark (distance) hesaplanır.</p>
+      <div class="formula-box">
+        dissimilarity = 0 → Çok benzer (aynı)<br />
+        dissimilarity → büyük → Çok farklı
+      </div>
+
+      <div class="alert alert-warn">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <div class="alert-title">Ne Zaman Feature Selection Yapılır?</div>
+          10 özellikten sadece en işlevsel olanlar seçilecekse, özellikler arasındaki korelasyona bakılır.
+          Korelasyon yüksekse biri atılır — feature sayısı düşürülür, model hızlanır.
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="korelasyon">📈 Korelasyon ve Kovaryans</h2>
+      <p>İki özellik arasında <strong>lineer bağlantı</strong> olup olmadığını ölçmek için kullanılır.</p>
+
+      <h3>Korelasyon (R)</h3>
+      <ul>
+        <li>Değer aralığı: <strong>−1 ile +1 arasında</strong></li>
+        <li>İki özellik arasındaki bağlantının <strong>gücünü ve yönünü</strong> verir</li>
+        <li><strong>Pozitif korelasyon:</strong> f1↑ → f2↑ veya f1↓ → f2↓ (birlikte değişir)</li>
+        <li><strong>Negatif korelasyon:</strong> f1↑ → f2↓ (ters yönde değişir)</li>
+        <li><strong>Sıfır korelasyon:</strong> Lineer bağlantı yok — 0 ise "bağımsız" denemez! Sadece lineer ilişki
+          yoktur.</li>
+      </ul>
+
+      <h3>Kovaryans</h3>
+      <ul>
+        <li>Değer: +, − ve 0 bulunur (sınırsız aralık)</li>
+        <li>İki özellik arasındaki ilişkinin şiddetini vermez (sadece yön)</li>
+        <li>Korelasyon daha bilgilendiricidir — hem yön hem gücü verir</li>
+      </ul>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">📌</div>
+        <div class="alert-body">
+          <div class="alert-title">Özet: Korelasyon vs Kovaryans</div>
+          Korelasyon (−1 ile +1 arası, normalize) > Kovaryans (sınırsız). Sınavda korelasyon sorarsa R kullanılır.
+          R=0 → "bağımsız" değil, lineer ilişki yok der!
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="pipeline">⚙️ ML Pipeline — Adım Adım Süreç</h2>
+      <ol class="steps">
+        <li><strong>Veri Temizleme</strong> — Missing data, outlier tespiti, normalizasyon</li>
+        <li><strong>Algoritma Seçimi</strong> — Linear mi, KNN mi, Decision Tree mi?</li>
+        <li><strong>Model Eğitimi</strong> — Training data ile <code>regr.fit(train_x, train_y)</code></li>
+        <li><strong>Model Değerlendirme</strong> — Test data ile MSE, R², Accuracy hesapla</li>
+        <li><strong>Yeni Örnekleri Tahmin</strong> — <code>predict()</code> ile yeni veri üzerinde kullan</li>
+      </ol>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">📌</div>
+        <div class="alert-body">
+          <div class="alert-title">Train/Test Ayrımı (Nottan — Regresyon sayfasından)</div>
+          Veri genellikle %80 eğitim, %20 test olarak ayrılır. <code>regr.fit(train_x, train_y)</code> ile
+          1 satırda eğitim parametreleri elde edilir. Bu parametrelerle doğru model elde edilebilir.
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 id="ornekler">🌍 Gerçek Dünya Örnekleri</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Uygulama</th>
+              <th>Tür</th>
+              <th>Açıklama</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CO₂ Emisyon Tahmini</td>
+              <td>Regresyon (Supervised)</td>
+              <td>Arabanın özelliklerinden emisyon tahmini</td>
+            </tr>
+            <tr>
+              <td>Kanser Tespiti</td>
+              <td>Classification (Supervised)</td>
+              <td>Kanser var mı yok mu? (0 veya 1 gibi)</td>
+            </tr>
+            <tr>
+              <td>İlaç Önerisi</td>
+              <td>Classification (Supervised)</td>
+              <td>8 feature: yaş, gender, BP → hangi ilaç?</td>
+            </tr>
+            <tr>
+              <td>Kredi Onayı</td>
+              <td>Classification (Supervised)</td>
+              <td>Kredi verilir mi?</td>
+            </tr>
+            <tr>
+              <td>Churn Tahmini</td>
+              <td>Classification (Supervised)</td>
+              <td>Müşteri gidecek mi? (churn=1/0)</td>
+            </tr>
+            <tr>
+              <td>Spam Filtresi</td>
+              <td>Classification (Supervised)</td>
+              <td>E-posta spam mı değil mi?</td>
+            </tr>
+            <tr>
+              <td>Speech Recognition</td>
+              <td>Classification (Supervised)</td>
+              <td>Konuşma → metin dönüşümü</td>
+            </tr>
+            <tr>
+              <td>Handwriting Tanıma</td>
+              <td>Classification (Supervised)</td>
+              <td>Her harf bir sınıf olur</td>
+            </tr>
+            <tr>
+              <td>Biometric Identification</td>
+              <td>Classification (Supervised)</td>
+              <td>Yüz / parmak izi tanıma</td>
+            </tr>
+            <tr>
+              <td>Netflix / Amazon Öneri</td>
+              <td>Unsupervised / Recommendation</td>
+              <td>Benzer kullanıcıların izlediği içerikler</td>
+            </tr>
+            <tr>
+              <td>Anomali Tespiti</td>
+              <td>Unsupervised</td>
+              <td>Kredi kartı dolandırıcılığı tespiti</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-exam">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <div class="alert-title">Bölüm 1 Sınav Özeti</div>
+          <ul>
+            <li><strong>Supervised = etiketli</strong> → Regresyon (continuous çıktı) veya Classification (discrete
+              çıktı)</li>
+            <li><strong>Unsupervised = etiketsiz</strong> → Clustering (k-means), Öneri Sistemleri</li>
+            <li>Feature = sütun | Sample/DO (Data Object) = satır</li>
+            <li>Korelasyon ≠ Bağımsızlık — R=0 ise "lineer bağlantı yok" demektir</li>
+            <li>Feature Selection: Korelasyonlu olanlardan birini at</li>
+            <li>Feature Extraction: Sayısal olmayan veriyi (resim, ses) sayısala çevirme</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="page-footer" style="margin-top:48px">
+        <a href="index.html">← Ana Sayfa</a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="b2_veri.html">Bölüm 2: Veri İşleme →</a>
+      </div>
+    </main>
+  </div>
+</body>
+
+</html>

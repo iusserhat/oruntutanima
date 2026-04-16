@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📝 Soru Bankası — Örüntü Tanıma</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ── Difficulty tabs ── */
+    .diff-tabs {
+      display: flex; gap: 12px; padding: 32px 40px 0;
+      max-width: 1100px; margin: 0 auto; flex-wrap: wrap;
+    }
+    .diff-tab {
+      padding: 10px 28px; border-radius: 8px; border: 2px solid transparent;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: all .2s; background: var(--bg2);
+    }
+    .diff-tab.easy   { border-color: rgba(63,185,80,.4);  color: #56d364; }
+    .diff-tab.medium { border-color: rgba(210,153,34,.4); color: #fbbf24; }
+    .diff-tab.hard   { border-color: rgba(248,81,73,.4);  color: #ff7b72; }
+    .diff-tab.active.easy   { background: rgba(63,185,80,.15);  border-color: #3fb950; }
+    .diff-tab.active.medium { background: rgba(210,153,34,.15); border-color: #d29922; }
+    .diff-tab.active.hard   { background: rgba(248,81,73,.15);  border-color: #f85149; }
+
+    /* ── Section wrapper ── */
+    .q-section { display: none; padding: 28px 40px 60px; max-width: 1100px; margin: 0 auto; }
+    .q-section.active { display: block; }
+
+    /* ── Category header ── */
+    .cat-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 22px; border-radius: 10px; margin: 32px 0 20px;
+      font-size: 15px; font-weight: 700;
+    }
+    .cat-fill  { background: rgba(56,139,253,.1);  border-left: 4px solid #388bfd; color: #79c0ff; }
+    .cat-test  { background: rgba(210,153,34,.1);  border-left: 4px solid #d29922; color: #fbbf24; }
+    .cat-klas  { background: rgba(63,185,80,.1);   border-left: 4px solid #3fb950; color: #56d364; }
+
+    /* ── Question card ── */
+    .q-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 22px 26px; margin-bottom: 16px;
+      transition: border-color .2s;
+    }
+    .q-card:hover { border-color: var(--accent); }
+    .q-num {
+      display: inline-block; width: 28px; height: 28px; line-height: 28px;
+      text-align: center; border-radius: 50%; font-size: 12px; font-weight: 700;
+      margin-right: 10px; flex-shrink: 0;
+    }
+    .q-num.easy   { background: rgba(63,185,80,.2);  color: #56d364; }
+    .q-num.medium { background: rgba(210,153,34,.2); color: #fbbf24; }
+    .q-num.hard   { background: rgba(248,81,73,.2);  color: #ff7b72; }
+
+    .q-text {
+      font-size: 15px; color: #e6edf3; line-height: 1.7;
+      display: flex; align-items: flex-start; gap: 0;
+    }
+    .q-body { flex: 1; }
+
+    /* blanks */
+    .blank {
+      display: inline-block; min-width: 120px; height: 24px;
+      border-bottom: 2px dashed #388bfd; margin: 0 4px;
+      vertical-align: middle; background: rgba(56,139,253,.05); border-radius: 3px 3px 0 0;
+    }
+
+    /* multiple choice */
+    .mc-opts { margin: 14px 0 0 38px; display: flex; flex-direction: column; gap: 8px; }
+    .mc-opt {
+      padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+      font-size: 13px; color: #c9d1d9; cursor: default;
+      transition: border-color .15s;
+    }
+    .mc-opt span { color: #8b949e; margin-right: 8px; font-weight: 700; }
+
+    /* answer reveal */
+    .q-answer-wrap { margin-top: 14px; }
+    .reveal-btn {
+      background: none; border: 1px solid var(--border);
+      color: #8b949e; padding: 6px 18px; border-radius: 6px;
+      font-size: 12px; cursor: pointer; transition: all .2s;
+      font-family: inherit; display: flex; align-items: center; gap: 6px;
+    }
+    .reveal-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+    .reveal-btn .arrow { transition: transform .25s; display: inline-block; }
+    .reveal-btn.open .arrow { transform: rotate(180deg); }
+
+    .answer-box {
+      display: none; margin-top: 10px; padding: 14px 18px;
+      border-radius: 8px; background: rgba(63,185,80,.07);
+      border: 1px solid rgba(63,185,80,.25); font-size: 13px;
+      color: #c9d1d9; line-height: 1.8;
+    }
+    .answer-box strong { color: #56d364; }
+    .answer-box code { background: #020407; padding: 1px 6px; border-radius: 4px; color: #79c0ff; font-size: 12px; }
+    .answer-box.visible { display: block; }
+
+    /* MC correct highlight (shown only after reveal) */
+    .mc-opt.correct-opt { border-color: #3fb950; color: #56d364; background: rgba(63,185,80,.07); }
+    .mc-opt.wrong-opt   { border-color: rgba(248,81,73,.3); color: #8b949e; }
+
+    /* score bar */
+    .score-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 10px 40px; display: flex; align-items: center; gap: 20px;
+      font-size: 13px; color: #8b949e;
+    }
+    .score-pill {
+      background: rgba(56,139,253,.12); border: 1px solid rgba(56,139,253,.3);
+      color: #79c0ff; padding: 4px 14px; border-radius: 20px;
+      font-weight: 700; font-size: 13px; min-width: 80px; text-align: center;
+    }
+    .reveal-all-btn {
+      margin-left: auto; background: rgba(210,153,34,.1);
+      border: 1px solid rgba(210,153,34,.4); color: #fbbf24;
+      padding: 6px 18px; border-radius: 6px; cursor: pointer;
+      font-size: 12px; font-family: inherit; transition: all .2s;
+    }
+    .reveal-all-btn:hover { background: rgba(210,153,34,.2); }
+
+    /* progress indicator */
+    .progress-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pdot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--border); transition: background .3s;
+    }
+    .pdot.revealed { background: #56d364; }
+
+    @media(max-width:640px){
+      .diff-tabs, .q-section { padding-left: 16px; padding-right: 16px; }
+      .mc-opts { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html" class="active">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">📝 Soru Bankası · Örüntü Tanıma</div>
+  <h1>Alıştırma Soruları</h1>
+  <p class="subtitle">Boşluk doldurma · Test (Çoktan seçmeli) · Klasik (Açık uçlu) — Kolay / Orta / Zor.<br>Her sorunun altındaki <strong>"Cevabı Gör"</strong> butonuna tıklayarak cevabı açabilirsin.</p>
+  <div class="meta">
+    <div class="meta-item">📄 Konu: <span>Tüm Bölümler</span></div>
+    <div class="meta-item">⏱ Süre: <span>Kendi hızında</span></div>
+    <div class="meta-item">🎯 Format: <span>Boşluk · Test · Klasik</span></div>
+  </div>
+</div>
+
+<!-- Difficulty Tabs -->
+<div class="diff-tabs">
+  <button class="diff-tab easy active" onclick="switchDiff('easy')">🟢 Kolay</button>
+  <button class="diff-tab medium" onclick="switchDiff('medium')">🟡 Orta</button>
+  <button class="diff-tab hard" onclick="switchDiff('hard')">🔴 Zor</button>
+</div>
+
+<!-- Score bar -->
+<div class="score-bar">
+  <span>Açılan cevap:</span>
+  <span class="score-pill" id="score-display">0 / 0</span>
+  <div class="progress-dots" id="progress-dots"></div>
+  <button class="reveal-all-btn" onclick="revealAll()">Hepsini Aç ↓</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     KOLAY
+════════════════════════════════════════════════ -->
+<div class="q-section active" id="section-easy">
+
+  <!-- BOŞLUK DOLDURMA -->
+  <div class="cat-header cat-fill">✏️ Boşluk Doldurma</div>
+
+  <!-- Q1 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">1</span>
+      <div class="q-body">
+        Makine öğrenmesinde verilerin etiketli (labeled) olduğu öğrenme türüne
+        <span class="blank"></span> denir; etiket olmadığında ise
+        <span class="blank"></span> öğrenme kullanılır.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>Supervised Learning (Denetimli Öğrenme)</strong> · <strong>Unsupervised (Denetimsiz)</strong></div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">2</span>
+      <div class="q-body">
+        Bir veri setinde satırlar <span class="blank"></span>'ı (data object),
+        sütunlar ise <span class="blank"></span>'ı temsil eder.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>Sample (Örnek / Veri Nesnesi)</strong> · <strong>Feature (Özellik)</strong></div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">3</span>
+      <div class="q-body">
+        Min-Max normalizasyon formülü: x' = <span class="blank"></span>
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>(x − min) / (max − min)</strong> — Tüm değerleri 0-1 arasına taşır.</div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">4</span>
+      <div class="q-body">
+        Z-score normalizasyonu formülü: Z = <span class="blank"></span>
+        <br/><small style="color:var(--muted)">(μ = ortalama, σ = standart sapma)</small>
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>(x − μ) / σ</strong></div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">5</span>
+      <div class="q-body">
+        IQR = <span class="blank"></span>. Alt sınır = <span class="blank"></span>, Üst sınır = <span class="blank"></span>.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>IQR = Q3 − Q1</strong><br/>Alt = Q1 − 1.5 × IQR<br/>Üst = Q3 + 1.5 × IQR</div>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">6</span>
+      <div class="q-body">
+        Wavelet Transform'da ortalama değer <span class="blank"></span> harfiyle,
+        fark (detail) değeri ise <span class="blank"></span> harfiyle gösterilir.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>a</strong> (average) · <strong>d</strong> (detail/difference)<br/>
+        a = (x₁ + x₂) / 2 &nbsp;&nbsp; d = (x₁ − x₂) / 2</div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">7</span>
+      <div class="q-body">
+        KNN algoritmasında k değeri çok küçük olursa <span class="blank"></span>,
+        çok büyük olursa <span class="blank"></span> riski oluşur.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>Overfitting</strong> (k=1 gibi) · <strong>Underfitting</strong> (tüm veri gibi)</div>
+    </div>
+  </div>
+
+  <!-- TEST -->
+  <div class="cat-header cat-test">🔘 Test (Çoktan Seçmeli)</div>
+
+  <!-- Q8 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">8</span>
+      <div class="q-body">Tahmin edilmek istenen değer <strong>sürekli (continuous)</strong> ise hangi yöntem kullanılır?</div>
+    </div>
+    <div class="mc-opts" id="mc8">
+      <div class="mc-opt"><span>A)</span>Classification</div>
+      <div class="mc-opt"><span>B)</span>Regression</div>
+      <div class="mc-opt"><span>C)</span>Clustering</div>
+      <div class="mc-opt"><span>D)</span>Dimensionality Reduction</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc8',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B) Regression</strong> — Çıktı sürekli (continuous) ise Regresyon; ayrık (discrete) ise Classification kullanılır.</div>
+    </div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">9</span>
+      <div class="q-body">Korelasyon katsayısı R'nin alabileceği değer aralığı hangisidir?</div>
+    </div>
+    <div class="mc-opts" id="mc9">
+      <div class="mc-opt"><span>A)</span>0 ile 1 arasında</div>
+      <div class="mc-opt"><span>B)</span>Sınırsız</div>
+      <div class="mc-opt"><span>C)</span>−1 ile +1 arasında</div>
+      <div class="mc-opt"><span>D)</span>−∞ ile 0 arasında</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc9',2)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>C) −1 ile +1 arasında</strong> — Kovaryans sınırsız aralıkta olabilir; korelasyon normalize edilmiş halidir.</div>
+    </div>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">10</span>
+      <div class="q-body">Eksik veriyi (missing data) çözmek için <strong>en kötü</strong> yöntem hangisidir?</div>
+    </div>
+    <div class="mc-opts" id="mc10">
+      <div class="mc-opt"><span>A)</span>Sütun ortalamasını boş hücreye yazma</div>
+      <div class="mc-opt"><span>B)</span>Decision Tree ile tahmin etme</div>
+      <div class="mc-opt"><span>C)</span>İlgili satırı tamamen silme</div>
+      <div class="mc-opt"><span>D)</span>Aynı class'a ait ortamayla doldurma</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc10',2)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>C) Satırı tamamen silme</strong> — Veri değerlidir; silmek kayıp demektir. En iyi yöntem aynı class ortalaması veya DT ile tahmintir.</div>
+    </div>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">11</span>
+      <div class="q-body">Hangi algoritmalarda normalizasyon <strong>zorunludur</strong>?</div>
+    </div>
+    <div class="mc-opts" id="mc11">
+      <div class="mc-opt"><span>A)</span>Decision Tree, Naive Bayes</div>
+      <div class="mc-opt"><span>B)</span>KNN, SVM, Logistic Regression</div>
+      <div class="mc-opt"><span>C)</span>Linear Regression, Decision Tree</div>
+      <div class="mc-opt"><span>D)</span>K-means, Naive Bayes</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc11',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B) KNN, SVM, Logistic Regression</strong> — Bu algoritmalar mesafe hesabı yaptığı için normalizasyon zorunludur. Decision Tree mesafe hesaplamaz.</div>
+    </div>
+  </div>
+
+  <!-- KLASİK -->
+  <div class="cat-header cat-klas">📋 Klasik (Açık Uçlu)</div>
+
+  <!-- Q12 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">12</span>
+      <div class="q-body">Noise (gürültü) ile Outlier (aykırı değer) arasındaki farkı açıklayınız ve her biri için birer örnek veriniz.</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <strong>Noise:</strong> Rastgele oluşan, <em>gerçek olmayan</em> veri hatasıdır. Ölçüm hatalarından kaynaklanır.<br/>
+        Örnek: Maaş değerinin −3 olması (imkânsız) → Noise.<br/><br/>
+        <strong>Outlier:</strong> Gerçek bir değerdir; ancak diğer verilerden çok farklıdır.<br/>
+        Örnek: Herkesin maaşı 5.000–10.000 TL iken birinin 200.000 TL olması → Outlier.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num easy">13</span>
+      <div class="q-body">Feature Extraction ile Feature Selection arasındaki farkı açıklayınız.</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <strong>Feature Extraction:</strong> Sayısal olmayan ham veriyi (resim, ses, metin) sayısal forma dönüştürme işlemidir. Örn: Resim → piksel değerleri (0–255).<br/><br/>
+        <strong>Feature Selection:</strong> Mevcut özellikler arasından en bilgili/işlevsel olanları seçme işlemidir. Birbirleriyle yüksek korelasyonlu özelliklerden biri çıkarılır.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /section-easy -->
+
+
+<!-- ═══════════════════════════════════════════════
+     ORTA
+════════════════════════════════════════════════ -->
+<div class="q-section" id="section-medium">
+
+  <!-- BOŞLUK DOLDURMA -->
+  <div class="cat-header cat-fill">✏️ Boşluk Doldurma</div>
+
+  <!-- Q1 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">1</span>
+      <div class="q-body">
+        Simple Linear Regression denklemi: ŷ = <span class="blank"></span> + <span class="blank"></span> · x₁
+        <br/>θ₁ formülü: θ₁ = <span class="blank"></span>
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        ŷ = <strong>θ₀</strong> + <strong>θ₁</strong> · x₁<br/>
+        θ₁ = <strong>Σ(xᵢ − x̄)·(yᵢ − ȳ) / Σ(xᵢ − x̄)²</strong><br/>
+        θ₀ = ȳ − θ₁ · x̄
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">2</span>
+      <div class="q-body">
+        Sigmoidal Non-linear Regresyon formülü: y = <span class="blank"></span><br/>
+        β₁ eğrinin <span class="blank"></span>'ini, β₂ ise eğrinin <span class="blank"></span>'ini belirler.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        y = <strong>1 / (1 + e^(−β₁(x − β₂)))</strong><br/>
+        β₁ → eğrinin <strong>eğimini</strong> (geçiş hızı) belirler.<br/>
+        β₂ → eğrinin <strong>merkezini</strong> (inflection point) belirler.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">3</span>
+      <div class="q-body">
+        Confusion Matrix'te:<br/>
+        TP + FN = <span class="blank"></span>'lerin toplamı.<br/>
+        FP + TN = <span class="blank"></span>'lerin toplamı.<br/>
+        Precision = TP / (TP + <span class="blank"></span>) &nbsp;&nbsp; Recall = TP / (TP + <span class="blank"></span>)
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        TP + FN = Gerçek pozitiflerin toplamı (<strong>Churn=1 olanlar</strong>)<br/>
+        FP + TN = Gerçek negatiflerin toplamı (<strong>Churn=0 olanlar</strong>)<br/>
+        Precision = TP / (TP + <strong>FP</strong>)<br/>
+        Recall = TP / (TP + <strong>FN</strong>)
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">4</span>
+      <div class="q-body">
+        Entropy formülü: E(t) = <span class="blank"></span><br/>
+        Saf (pure) düğümde Entropy = <span class="blank"></span>, iki sınıf eşit dağılımlıysa Entropy = <span class="blank"></span>.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        E(t) = <strong>−Σ P(i|t) · log₂(P(i|t))</strong><br/>
+        Pure node → Entropy = <strong>0</strong><br/>
+        50/50 dağılım → Entropy = <strong>1</strong> (maksimum)
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">5</span>
+      <div class="q-body">
+        Aşağıdaki Python kod satırlarında boşlukları doldurun:<br/>
+        <code style="color:#c9d1d9;background:#020407;padding:8px 12px;border-radius:6px;display:block;margin-top:10px;line-height:2">
+          scaler = preprocessing.<span class="blank" style="min-width:160px"></span>()<br/>
+          scaler.<span class="blank" style="min-width:60px"></span>(X)<br/>
+          X = scaler.<span class="blank" style="min-width:100px"></span>(X.astype(float))
+        </code>
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <code>StandardScaler</code> · <code>fit</code> · <code>transform</code><br/><br/>
+        2. satırda <strong>Z-score normalizasyonu yapılıyor</strong> (fit → ortalama ve std hesaplanır; transform → uygulanır).
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST -->
+  <div class="cat-header cat-test">🔘 Test (Çoktan Seçmeli)</div>
+
+  <!-- Q6 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">6</span>
+      <div class="q-body">Aşağıdaki grafik şekillerinden hangisi <strong>Sigmoidal</strong> modele karşılık gelir?</div>
+    </div>
+    <div class="mc-opts" id="mc-m6">
+      <div class="mc-opt"><span>A)</span>Düz çizgi ↗ (doğrusal artış)</div>
+      <div class="mc-opt"><span>B)</span>U şekli ∪ (tam parabol)</div>
+      <div class="mc-opt"><span>C)</span>S şekli ⌇ (yavaş başlar, hızlanır, yavaşlar)</div>
+      <div class="mc-opt"><span>D)</span>Üstel büyüme ↑↑ (sınırsız artar)</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-m6',2)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>C) S şekli</strong> — GDP gibi önce yavaş, sonra hızlı, ardından platoya ulaşan veriler Sigmoid ile modellenir. y = 1/(1+e^(−β₁(x−β₂)))</div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">7</span>
+      <div class="q-body">KNN algoritmasında yeni bir veri noktasının sınıfı nasıl belirlenir?</div>
+    </div>
+    <div class="mc-opts" id="mc-m7">
+      <div class="mc-opt"><span>A)</span>En uzak k komşunun sınıfı alınır</div>
+      <div class="mc-opt"><span>B)</span>En yakın k komşunun çoğunluk sınıfı alınır</div>
+      <div class="mc-opt"><span>C)</span>Tüm veri noktalarının ortalaması hesaplanır</div>
+      <div class="mc-opt"><span>D)</span>Decision Tree ile tahmin yapılır</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-m7',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B) En yakın k komşunun çoğunluk sınıfı</strong> — Classification için çoğunluk oyu; Regression için ise k komşunun ortalaması alınır.</div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">8</span>
+      <div class="q-body">Decision Tree'de kök düğüm (root node) nasıl seçilir?</div>
+    </div>
+    <div class="mc-opts" id="mc-m8">
+      <div class="mc-opt"><span>A)</span>Rastgele bir özellik seçilir</div>
+      <div class="mc-opt"><span>B)</span>En düşük Information Gain'e sahip özellik seçilir</div>
+      <div class="mc-opt"><span>C)</span>En yüksek Information Gain'e sahip özellik seçilir</div>
+      <div class="mc-opt"><span>D)</span>Veri setindeki ilk sütun seçilir</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-m8',2)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>C) En yüksek Information Gain</strong> — Tenis örneğinde Gain(Outlook)=0.424 en yüksek olduğundan Outlook kök düğüm seçilir.</div>
+    </div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">9</span>
+      <div class="q-body">Dengeli olmayan (imbalanced) veri setlerinde hangi metrik daha doğru sonuç verir?</div>
+    </div>
+    <div class="mc-opts" id="mc-m9">
+      <div class="mc-opt"><span>A)</span>Accuracy (Doğruluk)</div>
+      <div class="mc-opt"><span>B)</span>MSE</div>
+      <div class="mc-opt"><span>C)</span>R² Score</div>
+      <div class="mc-opt"><span>D)</span>F1 Score</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-m9',3)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>D) F1 Score</strong> — 1000'de 990 sağlıklı varsa Accuracy %99 gösterebilir ama model işe yaramaz. F1, Precision ve Recall'u dengeler.</div>
+    </div>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">10</span>
+      <div class="q-body">
+        <code>linear_model.LinearRegression()</code> kodunun sonucu ŷ = 125.38 + 39.09 × x ise;
+        x = 3.5 için tahmin nedir?
+      </div>
+    </div>
+    <div class="mc-opts" id="mc-m10">
+      <div class="mc-opt"><span>A)</span>136.82</div>
+      <div class="mc-opt"><span>B)</span>262.2</div>
+      <div class="mc-opt"><span>C)</span>301.5</div>
+      <div class="mc-opt"><span>D)</span>175.5</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-m10',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B) 262.2</strong> — ŷ = 125.38 + 39.09 × 3.5 = 125.38 + 136.82 ≈ 262.2 g/km CO₂</div>
+    </div>
+  </div>
+
+  <!-- KLASİK -->
+  <div class="cat-header cat-klas">📋 Klasik (Açık Uçlu)</div>
+
+  <!-- Q11 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">11</span>
+      <div class="q-body">
+        Veri seti: {4, 5, 7, 8, 9, 10, 12, 13, 15, 30}<br/>
+        IQR yöntemiyle outlier'ı bulunuz. Tüm adımları gösteriniz.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        1. Q2 (Medyan) = (9+10)/2 = <strong>9.5</strong><br/>
+        2. Q1 = {4,5,7,8,9} → medyan = <strong>7</strong><br/>
+        3. Q3 = {10,12,13,15,30} → medyan = <strong>13</strong><br/>
+        4. IQR = 13 − 7 = <strong>6</strong><br/>
+        5. Alt sınır = 7 − 1.5×6 = 7 − 9 = <strong>−2</strong><br/>
+        6. Üst sınır = 13 + 1.5×6 = 13 + 9 = <strong>22</strong><br/>
+        7. 30 &gt; 22 → <strong>30 OUTLIER!</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q12 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">12</span>
+      <div class="q-body">
+        Precision = 0.86, Recall = 0.40 olarak hesaplandı.<br/>
+        a) F1 Score'u hesaplayınız.<br/>
+        b) Bu sonucu yorumlayınız (neden Precision yüksek ama Recall düşük?)
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        a) F1 = 2 × (0.86 × 0.40) / (0.86 + 0.40) = 2 × 0.344 / 1.26 ≈ <strong>0.55</strong><br/><br/>
+        b) Model seçici davranmış → Pozitif dediğinde çoğunlukla haklı (Precision=0.86) fakat mevcut pozitiflerin çoğunu kaçırmış (Recall=0.40, FN çok yüksek). Yani churn olan müşterilerin %60'ını "kalmak" olarak yanlış tahmin etmiş.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num medium">13</span>
+      <div class="q-body">
+        KNN, P=(3,3) noktası için k=3. Aşağıdaki eğitim verisine göre hangi sınıf atanır? Euclidean mesafeleri hesaplayınız.<br/>
+        <span style="font-size:12px;color:#8b949e">P1(1,1)→B, P2(2,1)→B, P3(2,2)→B, P4(4,4)→A, P5(5,4)→A, P6(4,5)→A</span>
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        P1: √[(3-1)²+(3-1)²]=√8=2.83<br/>
+        P2: √[(3-2)²+(3-1)²]=√5=2.24<br/>
+        P3: √[(3-2)²+(3-2)²]=√2=<strong>1.41</strong> ✅<br/>
+        P4: √[(3-4)²+(3-4)²]=√2=<strong>1.41</strong> ✅<br/>
+        P5: √[(3-5)²+(3-4)²]=√5=2.24<br/>
+        P6: √[(3-4)²+(3-5)²]=√5=2.24<br/><br/>
+        En yakın 3: P3(B), P4(A), P2(B) veya P5(B)→ B=2, A=1 → <strong>Sınıf: B</strong>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /section-medium -->
+
+
+<!-- ═══════════════════════════════════════════════
+     ZOR
+════════════════════════════════════════════════ -->
+<div class="q-section" id="section-hard">
+
+  <!-- BOŞLUK DOLDURMA -->
+  <div class="cat-header cat-fill">✏️ Boşluk Doldurma</div>
+
+  <!-- Q1 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">1</span>
+      <div class="q-body">
+        Gini Index formülü: Gini(t) = <span class="blank"></span><br/>
+        İki sınıf için açık yazım: Gini = 1 − [<span class="blank"></span>]<br/>
+        Maksimum değeri <span class="blank"></span>, saf (pure) düğümde <span class="blank"></span>'dir.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        Gini(t) = <strong>1 − Σ P(i|t)²</strong><br/>
+        İki sınıf: Gini = 1 − [<strong>P(Yes)² + P(No)²</strong>]<br/>
+        Maksimum = <strong>0.5</strong> (50/50 dağılım) · Pure = <strong>0</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">2</span>
+      <div class="q-body">
+        Tenis veri setinde E(Root) = 0.94 (9 Yes, 5 No) verilmiştir.<br/>
+        Overcast (4 Yes, 0 No) için Entropy = <span class="blank"></span>.<br/>
+        Sunny (2 Yes, 3 No) ve Rain (3 Yes, 2 No) için Entropy'ler eşittir ve = <span class="blank"></span>.<br/>
+        Gain(D, Outlook) = <span class="blank"></span>.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        E(Overcast) = <strong>0.000</strong> (Pure node — tamamı Yes)<br/>
+        E(Sunny) = E(Rain) = −(2/5)log₂(2/5) − (3/5)log₂(3/5) ≈ <strong>0.971</strong><br/>
+        Gain(Outlook) = 0.94 − [(5/14)·0.971 + (4/14)·0 + (5/14)·0.971]<br/>
+        = 0.94 − 0.694 = <strong>0.246</strong><br/>
+        <small style="color:#8b949e">Not: Kaynak notlarda bazı farklı Gain değerleri de gösterilmiştir (örn: 0.424). Formülün adımlarını doğru uygulayabilmek önemlidir.</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">3</span>
+      <div class="q-body">
+        Wavelet Transform: x = {4, 6, 10, 2} verisi için Seviye 1 ve Seviye 2'yi hesaplayınız.
+        <br/>a değerlerini ve d değerlerini ayrı ayrı gösterin.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <strong>Seviye 1:</strong> Çiftler: (4,6) ve (10,2)<br/>
+        a₁ = (4+6)/2 = <strong>5</strong> · d₁ = (4−6)/2 = <strong>−1</strong><br/>
+        a₂ = (10+2)/2 = <strong>6</strong> · d₂ = (10−2)/2 = <strong>4</strong><br/>
+        A₁ = {5, 6} · D₁ = {−1, 4}<br/><br/>
+        <strong>Seviye 2:</strong> Çift: (5,6)<br/>
+        a = (5+6)/2 = <strong>5.5</strong> · d = (5−6)/2 = <strong>−0.5</strong><br/>
+        A₂ = {5.5} · D₂ = {−0.5}<br/><br/>
+        <strong>Sonuç:</strong> 4 eleman → 2 seviyede → tek özet değer = 5.5
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">4</span>
+      <div class="q-body">
+        Polynomial Regression'da <code>PolynomialFeatures(degree=2)</code> kullanıldığında
+        [2, 3, 1] verisi nasıl dönüştürülür? (Her değer için dönüşüm göster)
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        Degree=2 ile her değer x → [1, x, x²] şeklinde dönüştürülür:<br/>
+        2 → <strong>[1, 2, 4]</strong><br/>
+        3 → <strong>[1, 3, 9]</strong><br/>
+        1 → <strong>[1, 1, 1]</strong><br/><br/>
+        Bu yüzden <code>train_x</code> yerine <code>train_x_poly</code> kullanılır — veriler artık matris hâlinde.
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST -->
+  <div class="cat-header cat-test">🔘 Test (Çoktan Seçmeli)</div>
+
+  <!-- Q5 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">5</span>
+      <div class="q-body">
+        Train accuracy = 0.92, Test accuracy = 0.74 çıktı.
+        Bu durum için en doğru yorum hangisidir?
+      </div>
+    </div>
+    <div class="mc-opts" id="mc-h5">
+      <div class="mc-opt"><span>A)</span>Model yeterince öğrenmemiş (underfitting)</div>
+      <div class="mc-opt"><span>B)</span>Model başarılı, test verimiz hatalı</div>
+      <div class="mc-opt"><span>C)</span>Overfitting var, model eğitim verisini ezberlemiş</div>
+      <div class="mc-opt"><span>D)</span>Normalizasyon yapılmamış</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-h5',2)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>C) Overfitting</strong> — Train ve Test accuracy arasındaki fark 18 puan (0.92−0.74=0.18). 6 puandan fazla fark varsa Overfitting işareti. Çözüm: max_depth kısıtla, pruning uygula.</div>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">6</span>
+      <div class="q-body">
+        Churn örneğinde: TP=6, FP=1, FN=9, TN=24. Jaccard Index değeri nedir?
+      </div>
+    </div>
+    <div class="mc-opts" id="mc-h6">
+      <div class="mc-opt"><span>A)</span>0.75</div>
+      <div class="mc-opt"><span>B)</span>0.375</div>
+      <div class="mc-opt"><span>C)</span>0.86</div>
+      <div class="mc-opt"><span>D)</span>0.40</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-h6',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <strong>B) 0.375</strong><br/>
+        Jaccard = TP / (TP + FP + FN) = 6 / (6 + 1 + 9) = 6/16 = <strong>0.375</strong><br/>
+        Alternatif formül: |y ∩ ŷ| / (|y| + |ŷ| − |y ∩ ŷ|) — aynı sonucu verir.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">7</span>
+      <div class="q-body">
+        Bir Decision Tree modelinde Overcast → Pure Node olarak bulundu.
+        Bu düğüm için sonraki adım nedir?
+      </div>
+    </div>
+    <div class="mc-opts" id="mc-h7">
+      <div class="mc-opt"><span>A)</span>En yüksek IG'li özellikle tekrar bölünür</div>
+      <div class="mc-opt"><span>B)</span>Direkt YAPRAK DÜĞÜM (Leaf Node) yapılır, bölünmez</div>
+      <div class="mc-opt"><span>C)</span>Gini Index hesaplanıp yeniden sıralanır</div>
+      <div class="mc-opt"><span>D)</span>Bu düğüm atılır (pruning)</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-h7',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B) Direkt Leaf Node yapılır</strong> — Hunt's Algoritması: Tüm örnekler aynı sınıfa aitse (Entropy=0, Pure), düğüm Leaf Node olur ve bölünme durur. Overcast = 4/4 Yes → Pure → Leaf: YES.</div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">8</span>
+      <div class="q-body">
+        KNN ile LogLoss hesabında k=10 komşu kullanılıyor.
+        10 komşudan 9'u Churn=1, 1'i Churn=0. Predicted Churn olasılığı ve LogLoss yorumu nedir?
+      </div>
+    </div>
+    <div class="mc-opts" id="mc-h8">
+      <div class="mc-opt"><span>A)</span>Predicted Churn = 0.1, LogLoss yüksek</div>
+      <div class="mc-opt"><span>B)</span>Predicted Churn = 0.9, LogLoss düşük (iyi tahmin)</div>
+      <div class="mc-opt"><span>C)</span>Predicted Churn = 0.5, belirsiz</div>
+      <div class="mc-opt"><span>D)</span>KNN ile LogLoss hesaplanamaz</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-h8',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B) Predicted Churn = 0.9, LogLoss düşük</strong> — 9/10 komşu Churn=1, yani tahmin = 9/10 = 0.9. Gerçek değer de 1 olduğundan tahmin gerçeğe yakın → LogLoss düşük (≈0.11) → İyi model.</div>
+    </div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">9</span>
+      <div class="q-body">
+        Multiple Linear Regression'da 3 bağımsız değişken varsa, oluşturulan matris gösterimindeki
+        θᵀ ve X vektörleri nasıl yazılır?
+      </div>
+    </div>
+    <div class="mc-opts" id="mc-h9">
+      <div class="mc-opt"><span>A)</span>θᵀ = [θ₁, θ₂, θ₃], X = [x₁, x₂, x₃]</div>
+      <div class="mc-opt"><span>B)</span>θᵀ = [θ₀, θ₁, θ₂, θ₃], X = [x₀, x₁, x₂, x₃]ᵀ gdzie x₀=1</div>
+      <div class="mc-opt"><span>C)</span>θᵀ = [θ₀, θ₁, θ₂], X = [x₁, x₂, x₃]ᵀ</div>
+      <div class="mc-opt"><span>D)</span>ŷ = θ₀·x₀ + θ₁·x₁ şeklinde sadece iki boyut</div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggleMC(this,'mc-h9',1)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box"><strong>B)</strong> θᵀ = [θ₀, θ₁, θ₂, θ₃] · X = [x₀=1, x₁, x₂, x₃]ᵀ<br/>ŷ = θᵀX — intercept için x₀=1 sabiti eklenir. CO₂ örneğinde: ŷ = 62.91 + 9.17·(enginesize) + 8.40·(cylinders) + 9.84·(fuel)</div>
+    </div>
+  </div>
+
+  <!-- KLASİK -->
+  <div class="cat-header cat-klas">📋 Klasik (Açık Uçlu)</div>
+
+  <!-- Q10 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">10</span>
+      <div class="q-body">
+        Aşağıdaki veri için Wavelet Transform'un tüm seviyelerini hesaplayınız:<br/>
+        x = {10, 11, 12, 13, 14, 15, 16, 17}<br/>
+        Her seviyede a ve d değerlerini tabloya yazınız.
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <strong>Seviye 1:</strong> Çiftler: (10,11),(12,13),(14,15),(16,17)<br/>
+        A₁={10.5, 12.5, 14.5, 16.5} · D₁={−0.5, −0.5, −0.5, −0.5}<br/><br/>
+        <strong>Seviye 2:</strong> Çiftler: (10.5,12.5),(14.5,16.5)<br/>
+        A₂={11.5, 15.5} · D₂={−1, −1}<br/><br/>
+        <strong>Seviye 3:</strong> Çift: (11.5,15.5)<br/>
+        A₃={13.5} · D₃={−2}<br/><br/>
+        <strong>Sonuç:</strong> 8 eleman → 3 seviyede → tek özet = <strong>13.5</strong><br/>
+        Sıkıştırma: D₁={−0.5,−0.5,−0.5,−0.5} küçük → kaldırılabilir. D₂={−1,−1} da kaldırılırsa büyük sıkıştırma elde edilir.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">11</span>
+      <div class="q-body">
+        Decision Tree'de Humidity özelliği için Information Gain'i hesaplayınız.<br/>
+        Tenis veri setinden: E(Root)=0.94, 14 örnek.<br/>
+        Humidity=High: 3 Yes, 4 No (7 örnek) | Humidity=Normal: 6 Yes, 1 No (7 örnek)
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        E(High) = −(3/7)log₂(3/7) − (4/7)log₂(4/7)<br/>
+        = −0.429·(−1.222) − 0.571·(−0.807)<br/>
+        = 0.524 + 0.461 = <strong>0.985</strong><br/><br/>
+        E(Normal) = −(6/7)log₂(6/7) − (1/7)log₂(1/7)<br/>
+        = −0.857·(−0.222) − 0.143·(−2.807)<br/>
+        = 0.190 + 0.401 = <strong>0.591</strong><br/><br/>
+        Gain(D, Humidity) = 0.94 − [(7/14)·0.985 + (7/14)·0.591]<br/>
+        = 0.94 − [0.493 + 0.296] = 0.94 − 0.789 = <strong>0.151</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q12 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">12</span>
+      <div class="q-body">
+        Aşağıdaki Python kod bloğunu yazınız — Drug200.csv ile Decision Tree modeli kurma:<br/>
+        (LabelEncoder ile kategorik dönüşüm, train/test split, entropy kriteri ile eğitim, accuracy hesaplama)
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <code>from sklearn import preprocessing, metrics</code><br/>
+        <code>from sklearn.tree import DecisionTreeClassifier</code><br/>
+        <code>from sklearn.model_selection import train_test_split</code><br/><br/>
+        <code>le = preprocessing.LabelEncoder()</code><br/>
+        <code>X['Sex'] = le.fit_transform(X['Sex'])  # M/F → 0/1</code><br/>
+        <code>X['BP'] = le.fit_transform(X['BP'])    # HIGH/LOW/NORMAL → 0/1/2</code><br/><br/>
+        <code>X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=3)</code><br/><br/>
+        <code>drugTree = DecisionTreeClassifier(criterion='entropy', max_depth=4)</code><br/>
+        <code>drugTree.fit(X_train, y_train)</code><br/>
+        <code>predTree = drugTree.predict(X_test)</code><br/>
+        <code>print(metrics.accuracy_score(y_test, predTree))</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q-card">
+    <div class="q-text">
+      <span class="q-num hard">13</span>
+      <div class="q-body">
+        LogLoss formülünü yazınız ve yorumlayınız:<br/>
+        Gerçek Churn=1 olan bir kullanıcı için Predicted Churn=0.13 ise LogLoss ne olur? İyi mi kötü mü? Neden?
+      </div>
+    </div>
+    <div class="q-answer-wrap">
+      <button class="reveal-btn" onclick="toggle(this)"><span class="arrow">▼</span> Cevabı Gör</button>
+      <div class="answer-box">
+        <strong>LogLoss = −(1/n) · Σ[y · log(ŷ) + (1−y) · log(1−ŷ)]</strong><br/><br/>
+        y=1, ŷ=0.13 için: −[1·log(0.13) + 0·log(0.87)] = −log(0.13) ≈ <strong>2.04</strong><br/><br/>
+        <strong>Kötü!</strong> Gerçek değer Churn=1 iken model yalnızca %13 olasılık vermiş. Yani model müşterinin gitmeyeceğini düşünmüş ama yanılmış → Yüksek LogLoss = Kötü tahmin.<br/>
+        Karşılaştırma: Predicted=0.91 olsaydı LogLoss ≈ 0.11 (iyi) olurdu.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /section-hard -->
+
+<div class="page-footer" style="margin-top:60px">
+  <a href="sinav.html">← Sınav Özeti</a>
+  &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="index.html">Ana Sayfa →</a>
+</div>
+
+<script>
+  // ── Difficulty tab switching ──
+  function switchDiff(level) {
+    document.querySelectorAll('.diff-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.q-section').forEach(s => s.classList.remove('active'));
+    document.querySelector(`.diff-tab.${level}`).classList.add('active');
+    document.getElementById(`section-${level}`).classList.add('active');
+    updateScore();
+  }
+
+  // ── Toggle single answer ──
+  function toggle(btn) {
+    const box = btn.nextElementSibling;
+    const isOpen = box.classList.contains('visible');
+    box.classList.toggle('visible', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+    btn.querySelector('.arrow').textContent = isOpen ? '▼' : '▲';
+    btn.textContent = '';
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = isOpen ? '▼' : '▲';
+    btn.appendChild(arrow);
+    btn.appendChild(document.createTextNode(isOpen ? ' Cevabı Gör' : ' Gizle'));
+    updateScore();
+  }
+
+  // ── Toggle MC answer + highlight options ──
+  function toggleMC(btn, mcId, correctIdx) {
+    const box = btn.nextElementSibling;
+    const isOpen = box.classList.contains('visible');
+    box.classList.toggle('visible', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+
+    const opts = document.querySelectorAll(`#${mcId} .mc-opt`);
+    opts.forEach((opt, i) => {
+      opt.classList.remove('correct-opt', 'wrong-opt');
+      if (!isOpen) {
+        if (i === correctIdx) opt.classList.add('correct-opt');
+        else opt.classList.add('wrong-opt');
+      }
+    });
+
+    btn.textContent = '';
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = isOpen ? '▼' : '▲';
+    btn.appendChild(arrow);
+    btn.appendChild(document.createTextNode(isOpen ? ' Cevabı Gör' : ' Gizle'));
+    updateScore();
+  }
+
+  // ── Reveal all in active section ──
+  function revealAll() {
+    const activeSection = document.querySelector('.q-section.active');
+    activeSection.querySelectorAll('.answer-box').forEach(box => {
+      box.classList.add('visible');
+    });
+    activeSection.querySelectorAll('.reveal-btn').forEach(btn => {
+      btn.classList.add('open');
+    });
+    updateScore();
+  }
+
+  // ── Score counter ──
+  function updateScore() {
+    const activeSection = document.querySelector('.q-section.active');
+    const total = activeSection.querySelectorAll('.answer-box').length;
+    const opened = activeSection.querySelectorAll('.answer-box.visible').length;
+    document.getElementById('score-display').textContent = `${opened} / ${total}`;
+
+    // Progress dots
+    const container = document.getElementById('progress-dots');
+    container.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'pdot' + (i < opened ? ' revealed' : '');
+      container.appendChild(dot);
+    }
+  }
+
+  // Init score
+  updateScore();
+</script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎯 Sınav Hızlı Bakış</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .sinav-header {
+      background: linear-gradient(135deg, #1a0000 0%, #2d0000 50%, #1a0000 100%);
+      border-bottom: 1px solid rgba(248,81,73,0.4); padding: 48px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .sinav-header::before {
+      content:''; position:absolute; top:-50%; left:-25%;
+      width:700px; height:700px;
+      background: radial-gradient(circle, rgba(248,81,73,0.08) 0%, transparent 65%);
+    }
+    .sinav-header h1 {
+      font-size: clamp(2rem, 5vw, 3rem); font-weight: 900;
+      background: linear-gradient(135deg, #ff7b72 0%, #ffa657 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 12px;
+      position: relative; z-index: 1;
+    }
+    .sinav-header p { color: #8b949e; max-width: 500px; margin: 0 auto; position:relative;z-index:1; }
+    .sinav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 40px; max-width: 1200px; margin: 0 auto; }
+    .sinav-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px;
+    }
+    .s-red    { border-top: 3px solid var(--red); }
+    .s-yellow { border-top: 3px solid var(--yellow); }
+    .s-green  { border-top: 3px solid var(--green); }
+    .s-purple { border-top: 3px solid var(--accent); }
+    .sinav-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .sinav-card ul { padding-left:18px; }
+    .sinav-card li { font-size: 12px; color: #c9d1d9; margin-bottom: 6px; }
+    .sinav-card pre { font-size: 11px; }
+    .f-box {
+      background: #020407; border: 1px solid #2a2d3e;
+      border-radius: 6px; padding: 10px 14px; margin: 8px 0;
+      font-family: 'Fira Code', monospace; font-size: 12px; color: #c4b5fd; line-height: 1.8;
+    }
+    .checklist li { list-style: none; padding-left: 0; }
+    .checklist li::before { content: '□ '; color: var(--accent-light); font-weight: 700; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html" class="active">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="sinav-header">
+  <div style="font-size:40px;margin-bottom:12px;position:relative;z-index:1">🔥</div>
+  <h1>Sınav Hızlı Bakış</h1>
+  <p>Arkadaşının notundan alınan sınav ipuçları dahil tüm kritik formüller, kod kalıpları ve kavramlar tek sayfada.</p>
+</div>
+
+<div class="sinav-grid">
+
+  <!-- Çıkabilecekler -->
+  <div class="sinav-card s-red">
+    <h3 style="color:var(--red-light)">🚨 SıNAVDA ÇIKABİLECEKLER (Ders Notundan)</h3>
+    <ul>
+      <li><strong>LabelEncoder kodu</strong> — Kategorik veri → Sayı</li>
+      <li><strong>Decision Tree + Entropy</strong> hesaplama (IG en yüksek → root)</li>
+      <li><strong>Boşluk doldurma</strong> — StandardScaler, fit, transform</li>
+      <li><strong>Hangi model hangi grafik</strong> — Sigmoid, Polynomial, Linear</li>
+      <li><strong>Z-score normalizasyonu</strong> — 4 satır kod</li>
+      <li><strong>IQR ile outlier</strong> tespiti hesaplama</li>
+      <li style="color:var(--red-light)"><strong>⚠️ 7. Haftadan 3 konu = 3 soru:</strong></li>
+      <li>① Quantile-plot ile outlier bulma</li>
+      <li>② Wavelet Transform (sıkıştırma)</li>
+      <li>③ Decision Tree'de Entropy/IG hesaplama</li>
+    </ul>
+  </div>
+
+  <!-- Formüller -->
+  <div class="sinav-card s-yellow">
+    <h3 style="color:var(--yellow-light)">📐 Formüller — Hepsini Bil</h3>
+    <div class="f-box">SLR: ŷ = θ₀ + θ₁·x</div>
+    <div class="f-box">MLR: ŷ = θ₀ + Σθᵢxᵢ = θᵀX</div>
+    <div class="f-box">Sigmoid: y = 1/(1+e^(−β₁(x−β₂)))</div>
+    <div class="f-box">Z-score: Z = (x − μ) / σ</div>
+    <div class="f-box">Min-Max: x' = (x−min)/(max−min)</div>
+    <div class="f-box">IQR = Q3 − Q1 | Alt=Q1−1.5·IQR | Üst=Q3+1.5·IQR</div>
+    <div class="f-box">Entropy = −Σ P(i|t)·log₂P(i|t)</div>
+    <div class="f-box">IG = E(parent) − Σ(|Dᵥ|/|D|)·E(Dᵥ)</div>
+    <div class="f-box">Precision = TP/(TP+FP)</div>
+    <div class="f-box">Recall = TP/(TP+FN)</div>
+    <div class="f-box">F1 = 2·P·R/(P+R)</div>
+    <div class="f-box">Wavelet a = (x₁+x₂)/2 | d = (x₁−x₂)/2</div>
+  </div>
+
+  <!-- LabelEncoder -->
+  <div class="sinav-card s-red">
+    <h3 style="color:var(--red-light)">🔴 LabelEncoder — SINAV SORUSU</h3>
+    <pre><code><span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing
+
+le = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+
+X[<span class="hl-str">'Sex'</span>]  = le.fit_transform(X[<span class="hl-str">'Sex'</span>])
+<span class="hl-cm"># M/F → 1/0 (alfabetik)</span>
+X[<span class="hl-str">'BP'</span>]   = le.fit_transform(X[<span class="hl-str">'BP'</span>])
+<span class="hl-cm"># HIGH/LOW/NORMAL → 0/1/2</span></code></pre>
+  </div>
+
+  <!-- Z-Score Normalizasyon -->
+  <div class="sinav-card s-red">
+    <h3 style="color:var(--red-light)">🔴 Z-Score Normalizasyon — 4 Satır Kodu Bil</h3>
+    <pre><code>print(X[<span class="hl-num">0</span>:<span class="hl-num">5</span>])                            <span class="hl-cm"># 1</span>
+scaler = preprocessing.<span class="hl-cls">StandardScaler</span>()  <span class="hl-cm"># 2</span>
+scaler.fit(X)                             <span class="hl-cm"># 2 devam</span>
+X = scaler.transform(X.astype(float))    <span class="hl-cm"># 3</span>
+print(X[<span class="hl-num">0</span>:<span class="hl-num">5</span>])                            <span class="hl-cm"># 4</span></code></pre>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">2. satırda "Z-score normalizasyonu yapılıyor" söylenmeli!</p>
+  </div>
+
+  <!-- Decision Tree Entropy -->
+  <div class="sinav-card s-red">
+    <h3 style="color:var(--red-light)">🔴 Entropy Hesaplama Adımları</h3>
+    <ol style="padding-left:16px;font-size:12px;color:#c9d1d9">
+      <li style="margin-bottom:8px">P(Evet) = k/n, P(Hayır) = (n−k)/n</li>
+      <li style="margin-bottom:8px">E = −P(E)·log₂P(E) − P(H)·log₂P(H)</li>
+      <li style="margin-bottom:8px">Her özellik için E hesapla</li>
+      <li style="margin-bottom:8px">IG = E(kök) − Σ (ağırlık×E(alt))</li>
+      <li>En yüksek IG → Root Node</li>
+    </ol>
+    <div class="f-box" style="margin-top:10px">
+      Tenis: E(14:9Y,5N) = −(9/14)·log₂(9/14) − (5/14)·log₂(5/14) ≈ 0.94<br>
+      E(Overcast) = 0.000 (PURE!)<br>
+      <strong>Gain(D,Outlook) = 0.424 → EN YÜKSEK → ROOT!</strong><br>
+      Gain(D,Wind) = 0.102 | Gain(D,Humidity) = 0.016 | Gain(D,Temp) = 0.008
+    </div>
+  </div>
+
+  <!-- KNN -->
+  <div class="sinav-card s-yellow">
+    <h3 style="color:var(--yellow-light)">🟡 KNN Özet</h3>
+    <ul>
+      <li>Normalizasyon ZORUNLU (KNN, SVM, Logreg)</li>
+      <li>k=1'den 10'a dene → en yüksek accuracy</li>
+      <li>Euclidean: d = √[Σ(xᵢ−yᵢ)²]</li>
+      <li>Classification: Çoğunluk sınıfı seç</li>
+      <li>Regression: Ortalama al</li>
+    </ul>
+    <pre style="margin-top:8px"><code><span class="hl-kw">for</span> n <span class="hl-kw">in</span> range(<span class="hl-num">1</span>, <span class="hl-num">10</span>):
+    neigh = <span class="hl-cls">KNeighborsClassifier</span>(n_neighbors=n)
+    neigh.fit(X_train, y_train)
+    mean_acc[n-<span class="hl-num">1</span>] = accuracy_score(...)</code></pre>
+  </div>
+
+  <!-- Decision Tree Kod -->
+  <div class="sinav-card s-yellow">
+    <h3 style="color:var(--yellow-light)">🟡 Decision Tree Kod</h3>
+    <pre><code><span class="hl-cm"># LabelEncoder → fit → predict</span>
+drugTree = <span class="hl-cls">DecisionTreeClassifier</span>(
+    criterion=<span class="hl-str">'entropy'</span>,
+    max_depth=<span class="hl-num">4</span>
+)
+drugTree.fit(X_train, y_train)
+predTree = drugTree.predict(X_test)
+print(accuracy_score(y_test, predTree))</code></pre>
+  </div>
+
+  <!-- IQR Hesaplama -->
+  <div class="sinav-card s-purple">
+    <h3 style="color:var(--accent-light)">🟣 IQR Adım Adım</h3>
+    <p style="font-size:12px;margin-bottom:8px">Veri: {4, 5, 7, 8, 9, 10, 12, 13, 15, 30} (sıralı)</p>
+    <ul>
+      <li>Q2 (medyan) = (9+10)/2 = <strong>9.5</strong></li>
+      <li>Q1 (alt yarı medyanı) = <strong>7</strong></li>
+      <li>Q3 (üst yarı medyanı) = <strong>13</strong></li>
+      <li>IQR = Q3−Q1 = 13−7 = <strong>6</strong></li>
+      <li>Alt = Q1−1.5×IQR = 7−9 = <strong>−2</strong></li>
+      <li>Üst = Q3+1.5×IQR = 13+9 = <strong>22</strong></li>
+      <li>30 &gt; 22 → <strong style="color:var(--red-light)">30 OUTLIER!</strong></li>
+    </ul>
+  </div>
+
+  <!-- Grafik-Model Eşleştirme -->
+  <div class="sinav-card s-purple">
+    <h3 style="color:var(--accent-light)">🟣 Grafik → Hangi Model?</h3>
+    <ul>
+      <li>Düz çizgi ↗ → <strong>Linear: y=ax+b</strong></li>
+      <li>Yükselen eğri ↗ → <strong>Polynomial: y=ax²+bx+c</strong></li>
+      <li>U şekli ∪ → <strong>Quadratic: y=x²</strong></li>
+      <li>S şekli ⌇ → <strong>Sigmoid: y=1/(1+e^(−β₁(x−β₂)))</strong></li>
+      <li>Üstel büyüme ↑↑ → <strong>Exponential: y=a+b·cˣ</strong></li>
+      <li>Yavaşlayan artış → <strong>Logarithmic: y=log(x)</strong></li>
+    </ul>
+  </div>
+
+  <!-- Metrik Seçimi -->
+  <div class="sinav-card s-green">
+    <h3 style="color:var(--green-light)">🟢 Hangi Metrik Ne Zaman?</h3>
+    <ul>
+      <li>Regresyon → MSE, MAE, R²</li>
+      <li>Dengeli veri → Accuracy</li>
+      <li>Dengesiz veri → F1 Score</li>
+      <li>Yanlış alarmı azalt → Precision</li>
+      <li>Hiçbir pozitifi kaçırma → Recall</li>
+      <li>Olasılık bazlı → LogLoss</li>
+    </ul>
+    <div class="f-box" style="margin-top:8px">
+      FN = Gerçek Pozitif ama Negatif dedik → EN TEHLİKELİ
+      FP = Gerçek Negatif ama Pozitif dedik → Yanlış Alarm
+    </div>
+  </div>
+
+  <!-- Wavelet -->
+  <div class="sinav-card s-green">
+    <h3 style="color:var(--green-light)">🟢 Wavelet Formülleri</h3>
+    <div class="f-box">a = (x₁ + x₂) / 2 → Ortalama (taşınır)</div>
+    <div class="f-box">d = (x₁ − x₂) / 2 → Fark (saklanır)</div>
+    <p style="font-size:12px;margin-top:8px;color:#c9d1d9">8 elemanlı veri → 3 adımda → 1 özet değer<br>16 elemanlı veri → 4 adımda → 1 özet değer</p>
+    <p style="font-size:11px;color:var(--muted)">Sıkıştırma: 0 olanlar kaldırılır VEYA küçük (threshold) değerler atılır.</p>
+    <div class="f-box" style="font-size:11px">
+      Örnek (16 değer sonucu):<br>
+      A₄ = {14.25} ← Tek özet değer!<br>
+      D değerleri: saklanır veya küçükleri atılır.
+    </div>
+  </div>
+
+  <!-- Kavramlar -->
+  <div class="sinav-card s-green">
+    <h3 style="color:var(--green-light)">🟢 Kavramlar — Hızlı Hatırlama</h3>
+    <ul>
+      <li>Feature = sütun | Sample = satır</li>
+      <li>Noise = imkânsız veri | Outlier = uç ama gerçek</li>
+      <li>Supervised = etiketli | Unsupervised = etiketsiz</li>
+      <li>Regression = sürekli çıktı | Classification = ayrık çıktı</li>
+      <li>Entropy=0 → Pure | Entropy=1 → Maksimum karışıklık</li>
+      <li>IG büyük → Root Node adayı</li>
+      <li>LogLoss küçük → iyi model</li>
+    </ul>
+  </div>
+
+  <!-- Boşluk Doldurma -->
+  <div class="sinav-card s-red" style="grid-column: 1 / -1">
+    <h3 style="color:var(--red-light)">🚨 Boşluk Doldurma — Kritik Kelimeler</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Boşluk</th><th>Cevap</th><th>Boşluk</th><th>Cevap</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>preprocessing._____()</code></td><td><code>StandardScaler</code></td>
+            <td><code>preprocessing._____()</code></td><td><code>LabelEncoder</code></td>
+          </tr>
+          <tr>
+            <td><code>_____(n_neighbors=7)</code></td><td><code>KNeighborsClassifier</code></td>
+            <td><code>_____(criterion='entropy')</code></td><td><code>DecisionTreeClassifier</code></td>
+          </tr>
+          <tr>
+            <td><code>_____(degree=2)</code></td><td><code>PolynomialFeatures</code></td>
+            <td><code>from scipy.optimize import _____</code></td><td><code>curve_fit</code></td>
+          </tr>
+          <tr>
+            <td><code>model._____(X_train, y_train)</code></td><td><code>fit</code></td>
+            <td><code>yhat = model._____(X_test)</code></td><td><code>predict</code></td>
+          </tr>
+          <tr>
+            <td><code>from sklearn.model_selection import _____</code></td><td><code>train_test_split</code></td>
+            <td><code>scaler._____(X)</code></td><td><code>fit</code></td>
+          </tr>
+          <tr>
+            <td><code>X = scaler._____(X.astype(float))</code></td><td><code>transform</code></td>
+            <td><code>scaler._____(X)</code></td><td><code>fit_transform</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Son Kontrol -->
+  <div class="sinav-card s-purple" style="grid-column: 1 / -1">
+    <h3 style="color:var(--accent-light)">✅ Sınav Öncesi Son Kontrol Listesi</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px">
+      <ul class="checklist" style="font-size:13px;margin:0;padding:0">
+        <li>Entropy formülünü yaz (log₂ ile)</li>
+        <li>Information Gain hesabını yap</li>
+        <li>LabelEncoder kodunu yaz</li>
+        <li>StandardScaler 4 satırını yaz</li>
+        <li>IQR adımlarını sırala</li>
+      </ul>
+      <ul class="checklist" style="font-size:13px;margin:0;padding:0">
+        <li>Sigmoid formülünü yaz</li>
+        <li>Min-Max ve Z-score farkını bil</li>
+        <li>Precision vs Recall farkını açıkla</li>
+        <li>Hangi grafik → hangi model</li>
+        <li>Wavelet a ve d formülleri</li>
+      </ul>
+      <ul class="checklist" style="font-size:13px;margin:0;padding:0">
+        <li>KNN'de normalizasyon neden şart</li>
+        <li>train_test_split parametreleri</li>
+        <li>criterion='entropy' ne demek</li>
+        <li>FN neden FP'den tehlikeli</li>
+        <li>feature vs sample farkı</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="page-footer">
+  <a href="b8_kod.html">← Bölüm 8</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="index.html">Ana Sayfa →</a>
+</div>
+</body>
+</html>

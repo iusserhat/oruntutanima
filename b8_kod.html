@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 8 · Python Kod Referansı</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html" class="active">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">💻 Bölüm 8 · Python Kod Referansı</div>
+  <h1>Tüm Kritik Kodlar<br><span style="font-size:0.6em;color:#8b949e">jadijadi/machine_learning_with_python_jadi</span></h1>
+  <p class="subtitle">Sınavda sorulabilecek tüm Python kod parçaları. LabelEncoder, train_test_split, normalizasyon, regresyon, KNN, Decision Tree ve daha fazlası — notlarda çerçeve içine alınan ve özellikle vurgulanan kodlar.</p>
+  <div class="meta">
+    <div class="meta-item">🔗 Repo: <span>jadijadi/machine_learning_with_python_jadi</span></div>
+    <div class="meta-item">🔑 Kütüphane: <span>sklearn, numpy, pandas, scipy</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🔴 Kod soruları çıkabilir</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Kod Kategorileri</div>
+    <a href="#imports">Import'lar</a>
+    <a href="#veri">Veri İşleme</a>
+    <a href="#labelencoder">LabelEncoder ⚠️</a>
+    <a href="#normalizasyon">Normalizasyon</a>
+    <a href="#traintest">Train/Test Split</a>
+    <a href="#slr">Simple Linear Reg.</a>
+    <a href="#mlr">Multiple Linear Reg.</a>
+    <a href="#poly">Polynomial Reg.</a>
+    <a href="#sigmoid">Non-Linear / Sigmoid</a>
+    <a href="#knn">KNN</a>
+    <a href="#dtree">Decision Tree</a>
+    <a href="#metrikler">Metrik Hesaplama</a>
+    <a href="#boşluk">Boşluk Doldurma</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="imports">📦 Temel Import'lar</h2>
+
+    <pre><code><span class="hl-cm"># ── Temel Kütüphaneler ──</span>
+<span class="hl-kw">import</span> numpy <span class="hl-kw">as</span> np
+<span class="hl-kw">import</span> pandas <span class="hl-kw">as</span> pd
+<span class="hl-kw">import</span> matplotlib.pyplot <span class="hl-kw">as</span> plt
+
+<span class="hl-cm"># ── Scikit-Learn genel ──</span>
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing, metrics
+<span class="hl-kw">from</span> sklearn.model_selection <span class="hl-kw">import</span> train_test_split
+
+<span class="hl-cm"># ── Regresyon ──</span>
+<span class="hl-kw">from</span> sklearn.linear_model <span class="hl-kw">import</span> <span class="hl-cls">LinearRegression</span>
+<span class="hl-kw">from</span> sklearn.preprocessing <span class="hl-kw">import</span> <span class="hl-cls">PolynomialFeatures</span>
+<span class="hl-kw">from</span> scipy.optimize <span class="hl-kw">import</span> curve_fit
+
+<span class="hl-cm"># ── Classification ──</span>
+<span class="hl-kw">from</span> sklearn.neighbors <span class="hl-kw">import</span> <span class="hl-cls">KNeighborsClassifier</span>
+<span class="hl-kw">from</span> sklearn.tree <span class="hl-kw">import</span> <span class="hl-cls">DecisionTreeClassifier</span>
+
+<span class="hl-cm"># ── Metrikler ──</span>
+<span class="hl-kw">from</span> sklearn.metrics <span class="hl-kw">import</span> (
+    accuracy_score, mean_absolute_error, mean_squared_error,
+    r2_score, precision_score, recall_score, f1_score,
+    jaccard_score, log_loss, confusion_matrix
+)</code></pre>
+
+    <hr/>
+
+    <h2 id="veri">🗃 Veri Yükleme ve İnceleme</h2>
+
+    <pre><code><span class="hl-cm"># Veri yükleme</span>
+df = pd.read_csv(<span class="hl-str">'dosya.csv'</span>)
+
+<span class="hl-cm"># İlk inceleme</span>
+df.head()              <span class="hl-cm"># İlk 5 satır</span>
+df.tail()              <span class="hl-cm"># Son 5 satır</span>
+df.describe()          <span class="hl-cm"># İstatistik özet (mean, std, min, max...)</span>
+df.shape               <span class="hl-cm"># (satır sayısı, sütun sayısı)</span>
+df.columns             <span class="hl-cm"># Feature isimleri (sütunlar)</span>
+df.dtypes              <span class="hl-cm"># Her sütunun veri tipi</span>
+df.isnull().sum()      <span class="hl-cm"># Her sütundaki boş değer sayısı</span>
+df[<span class="hl-str">'label'</span>].value_counts()   <span class="hl-cm"># Sınıf dağılımı (sadece kategorik için)</span>
+
+<span class="hl-cm"># Seçili sütunları al</span>
+cdf = df[[<span class="hl-str">'ENGINESIZE'</span>, <span class="hl-str">'CYLINDERS'</span>, <span class="hl-str">'CO2EMISSIONS'</span>]]
+
+<span class="hl-cm"># Missing data doldurma</span>
+df[<span class="hl-str">'yaş'</span>].fillna(df[<span class="hl-str">'yaş'</span>].mean(), inplace=<span class="hl-num">True</span>)  <span class="hl-cm"># Ortalama ile doldur</span>
+df.dropna(inplace=<span class="hl-num">True</span>)                              <span class="hl-cm"># Boş satırları sil (EN KÖTÜ)</span>
+
+<span class="hl-cm"># Görselleştirme</span>
+df[[<span class="hl-str">'ENGINESIZE'</span>, <span class="hl-str">'CYLINDERS'</span>]].hist()
+plt.show()
+
+plt.scatter(cdf[<span class="hl-str">'ENGINESIZE'</span>], cdf[<span class="hl-str">'CO2EMISSIONS'</span>])
+plt.xlabel(<span class="hl-str">'Engine size'</span>)
+plt.ylabel(<span class="hl-str">'CO2 Emission'</span>)
+plt.show()
+</code></pre>
+
+    <hr/>
+
+    <h2 id="labelencoder">🏷 LabelEncoder — SINAV SORUSU!</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Arkadaşının Notu: LabelEncoder sınavda çıkabilir!</div>
+        Kategorik verileri (metin/yazı) sayısal değerlere çevirir. Decision Tree ve ML algoritmaları sayısal veri ister.
+      </div>
+    </div>
+
+    <pre><code><span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing
+
+le = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+
+<span class="hl-cm"># Tek sütun dönüştürme</span>
+df[<span class="hl-str">'Sex'</span>] = le.fit_transform(df[<span class="hl-str">'Sex'</span>])
+<span class="hl-cm"># 'M' → 1, 'F' → 0 (alfabetik sıra)</span>
+
+<span class="hl-cm"># Birden fazla sütun</span>
+le_sex        = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+le_bp         = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+le_chol       = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+
+X[<span class="hl-str">'Sex'</span>]         = le_sex.fit_transform(X[<span class="hl-str">'Sex'</span>])
+X[<span class="hl-str">'BP'</span>]          = le_bp.fit_transform(X[<span class="hl-str">'BP'</span>])
+X[<span class="hl-str">'Cholesterol'</span>]  = le_chol.fit_transform(X[<span class="hl-str">'Cholesterol'</span>])
+
+<span class="hl-cm"># Sonuç kontrol</span>
+print(X.head())
+
+<span class="hl-cm"># Ters dönüşüm (gerekirse)</span>
+print(le_sex.classes_)     <span class="hl-cm"># ['F', 'M'] → F=0, M=1</span>
+print(le_sex.inverse_transform([<span class="hl-num">0</span>, <span class="hl-num">1</span>]))  <span class="hl-cm"># [0,1] → ['F', 'M']</span>
+</code></pre>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body">
+        <div class="alert-title">LabelEncoder Nasıl Çalışır?</div>
+        <p>Sınıfları alfabetik sıralar ve 0'dan başlayarak sayı verir.</p>
+        <ul>
+          <li>['F', 'M'] → F=0, M=1</li>
+          <li>['HIGH', 'LOW', 'NORMAL'] → HIGH=0, LOW=1, NORMAL=2</li>
+          <li>['No', 'Yes'] → No=0, Yes=1</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="normalizasyon">⚖️ Normalizasyon</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing
+
+<span class="hl-cm"># ─── Z-Score (StandardScaler) ─── SINAV KODU!</span>
+print(X[<span class="hl-num">0</span>:<span class="hl-num">5</span>])                                    <span class="hl-cm"># 1. satır</span>
+scaler = preprocessing.<span class="hl-cls">StandardScaler</span>()
+scaler.fit(X)                                   <span class="hl-cm"># 2. satır → hesaplama yapılır</span>
+X = scaler.transform(X.astype(float))           <span class="hl-cm"># 3. satır → float'a dönüştür, transform uygula</span>
+print(X[<span class="hl-num">0</span>:<span class="hl-num">5</span>])                                    <span class="hl-cm"># 4. satır</span>
+
+<span class="hl-cm"># NOT: Bu 4 satır sıravyla sınavda çıkabilir!</span>
+<span class="hl-cm"># 2. satırda Z-score normalizasyonu yapıldığı söylenmeli</span>
+
+<span class="hl-cm"># ─── Min-Max ───</span>
+X_norm = (X - X.min()) / (X.max() - X.min())
+
+<span class="hl-cm"># ─── Kısa yol (fit+transform birleşik) ───</span>
+X_scaled = preprocessing.<span class="hl-cls">StandardScaler</span>().fit_transform(X.astype(float))
+</code></pre>
+
+    <hr/>
+
+    <h2 id="traintest">✂️ Train/Test Split</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.model_selection <span class="hl-kw">import</span> train_test_split
+
+<span class="hl-cm"># Yöntem 1: sklearn (en yaygın)</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=<span class="hl-num">0.2</span>,     <span class="hl-cm"># %80 train, %20 test</span>
+    random_state=<span class="hl-num">4</span>    <span class="hl-cm"># Her çalıştırmada aynı bölme</span>
+)
+print(<span class="hl-str">'Train set:'</span>, X_train.shape, y_train.shape)
+print(<span class="hl-str">'Test set:'</span>,  X_test.shape,  y_test.shape)
+
+<span class="hl-cm"># Yöntem 2: Manuel maske (notlarda gösterilen)</span>
+msk = np.random.rand(len(df)) &lt; <span class="hl-num">0.8</span>
+train = df[msk]
+test  = df[~msk]
+</code></pre>
+
+    <hr/>
+
+    <h2 id="slr">📈 Simple Linear Regression</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.linear_model <span class="hl-kw">import</span> <span class="hl-cls">LinearRegression</span>
+
+<span class="hl-cm"># Feature ve label hazırla (numpy array)</span>
+train_x = np.asanyarray(train[[<span class="hl-str">'ENGINESIZE'</span>]])    <span class="hl-cm"># [n,1] şeklinde 2D</span>
+train_y = np.asanyarray(train[[<span class="hl-str">'CO2EMISSIONS'</span>]])
+
+<span class="hl-cm"># Model oluştur ve eğit</span>
+regr = <span class="hl-cls">LinearRegression</span>()
+regr.fit(train_x, train_y)
+
+<span class="hl-cm"># Katsayılar</span>
+print(<span class="hl-str">"Coefficients: "</span>, regr.coef_)        <span class="hl-cm"># θ₁ = [39.093]</span>
+print(<span class="hl-str">"Intercept: "</span>,    regr.intercept_)    <span class="hl-cm"># θ₀ = [125.38]</span>
+<span class="hl-cm"># Denklem: ŷ = 125.38 + 39.093 × ES</span>
+
+<span class="hl-cm"># Tahmin ve değerlendirme</span>
+test_x  = np.asanyarray(test[[<span class="hl-str">'ENGINESIZE'</span>]])
+test_y  = np.asanyarray(test[[<span class="hl-str">'CO2EMISSIONS'</span>]])
+test_y_hat = regr.predict(test_x)
+
+print(<span class="hl-str">"MAE:  "</span>, mean_absolute_error(test_y, test_y_hat))  <span class="hl-cm"># 22.71</span>
+print(<span class="hl-str">"R²:   "</span>, r2_score(test_y, test_y_hat))             <span class="hl-cm"># 0.77</span>
+
+<span class="hl-cm"># Görselleştirme</span>
+plt.scatter(train_x, train_y, color=<span class="hl-str">'blue'</span>)
+plt.plot(train_x, regr.coef_[<span class="hl-num">0</span>][<span class="hl-num">0</span>]*train_x + regr.intercept_[<span class="hl-num">0</span>], <span class="hl-str">'-r'</span>)
+plt.xlabel(<span class="hl-str">'Engine size'</span>); plt.ylabel(<span class="hl-str">'CO2 Emission'</span>)
+plt.show()
+</code></pre>
+
+    <hr/>
+
+    <h2 id="mlr">📊 Multiple Linear Regression</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.linear_model <span class="hl-kw">import</span> <span class="hl-cls">LinearRegression</span>
+
+<span class="hl-cm"># 3 bağımsız değişken</span>
+X_train = np.asanyarray(train[[<span class="hl-str">'ENGINESIZE'</span>, <span class="hl-str">'CYLINDERS'</span>, <span class="hl-str">'FUELCONSUMPTION_COMB'</span>]])
+y_train = np.asanyarray(train[[<span class="hl-str">'CO2EMISSIONS'</span>]])
+
+regr = <span class="hl-cls">LinearRegression</span>()
+regr.fit(X_train, y_train)
+
+print(<span class="hl-str">"Coefficients:"</span>, regr.coef_)    <span class="hl-cm"># [9.17, 8.40, 9.84]</span>
+print(<span class="hl-str">"Intercept:"</span>, regr.intercept_)  <span class="hl-cm"># [62.91]</span>
+<span class="hl-cm"># ŷ = 62.91 + 9.17·ES + 8.40·CY + 9.84·FC</span>
+
+<span class="hl-cm"># Test</span>
+X_test = np.asanyarray(test[[<span class="hl-str">'ENGINESIZE'</span>, <span class="hl-str">'CYLINDERS'</span>, <span class="hl-str">'FUELCONSUMPTION_COMB'</span>]])
+y_test = np.asanyarray(test[[<span class="hl-str">'CO2EMISSIONS'</span>]])
+y_hat  = regr.predict(X_test)
+
+print(<span class="hl-str">"Variance score: %.2f"</span> % r2_score(y_test, y_hat))  <span class="hl-cm"># 0.86</span>
+</code></pre>
+
+    <hr/>
+
+    <h2 id="poly">🌀 Polynomial Regression</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.preprocessing <span class="hl-kw">import</span> <span class="hl-cls">PolynomialFeatures</span>
+<span class="hl-kw">from</span> sklearn.linear_model  <span class="hl-kw">import</span> <span class="hl-cls">LinearRegression</span>
+
+<span class="hl-cm"># 1. Degree (derece) belirt</span>
+poly = <span class="hl-cls">PolynomialFeatures</span>(degree=<span class="hl-num">2</span>)
+
+<span class="hl-cm"># 2. Eğitim verisini dönüştür</span>
+train_x_poly = poly.fit_transform(train_x)  <span class="hl-cm"># [1, x, x²] şekline getir</span>
+
+<span class="hl-cm"># 3. LinearRegression ile eğit</span>
+clf = <span class="hl-cls">LinearRegression</span>()
+clf.fit(train_x_poly, train_y)
+
+print(<span class="hl-str">"Coefficients:"</span>, clf.coef_)        <span class="hl-cm"># [θ₀, θ₁, θ₂]</span>
+print(<span class="hl-str">"Intercept:"</span>, clf.intercept_)      <span class="hl-cm"># sabit</span>
+
+<span class="hl-cm"># 4. Test verisini de aynı şekilde dönüştür</span>
+test_x_poly = poly.transform(test_x)  <span class="hl-cm"># !! fit_transform değil, sadece transform</span>
+y_hat = clf.predict(test_x_poly)
+
+print(<span class="hl-str">"MAE:"</span>, mean_absolute_error(test_y, y_hat))     <span class="hl-cm"># 25.28</span>
+print(<span class="hl-str">"R²: "</span>, r2_score(test_y, y_hat))                <span class="hl-cm"># 0.75</span>
+</code></pre>
+
+    <hr/>
+
+    <h2 id="sigmoid">📉 Non-Linear Regression / Sigmoid</h2>
+
+    <pre><code><span class="hl-kw">import</span> numpy <span class="hl-kw">as</span> np
+<span class="hl-kw">from</span> scipy.optimize <span class="hl-kw">import</span> curve_fit
+
+<span class="hl-cm"># ─── Sigmoid Fonksiyonu Tanımı ───</span>
+<span class="hl-kw">def</span> <span class="hl-fn">sigmoid</span>(x, beta1, beta2):   <span class="hl-cm"># 'veri' parametresi olarak x</span>
+    y = <span class="hl-num">1</span> / (<span class="hl-num">1</span> + np.exp(-beta1 * (x - beta2)))
+    <span class="hl-kw">return</span> y
+
+<span class="hl-cm"># ─── İlk Tahminle Test Et ───</span>
+beta1 = <span class="hl-num">0.3</span>
+beta2 = <span class="hl-num">1990</span>
+y_pred = sigmoid(x, beta1, beta2)
+
+<span class="hl-cm"># ─── Veriyi normalize et (0-1 arası) ───</span>
+xdata = x / max(x)           <span class="hl-cm"># 1, 2, 3, 30, 40 → 1/40, 2/40...</span>
+ydata = y / max(y)
+
+<span class="hl-cm"># ─── En iyi beta1 ve beta2'yi bul (curve_fit) ───</span>
+popt, pcov = curve_fit(sigmoid, xdata, ydata)
+<span class="hl-cm"># popt = [beta1_optimal, beta2_optimal]</span>
+
+print(<span class="hl-str">"beta1:"</span>, popt[<span class="hl-num">0</span>], <span class="hl-str">"beta2:"</span>, popt[<span class="hl-num">1</span>])
+
+<span class="hl-cm"># ─── Tahmin ───</span>
+y_pred_opt = sigmoid(xdata, *popt)   <span class="hl-cm"># *popt → popt listesini parametrelere yayar</span>
+<span class="hl-cm"># *popt yerine popt[0], popt[1] da yazılabilir</span>
+
+<span class="hl-cm"># ─── Accuracy ───</span>
+print(<span class="hl-str">"R² Accuracy:"</span>, r2_score(ydata, y_pred_opt))
+
+<span class="hl-cm"># ─── Genel Non-Linear ─── (Quadratic)</span>
+x_q = np.arange(-<span class="hl-num">5</span>, <span class="hl-num">5</span>, <span class="hl-num">0.1</span>)      <span class="hl-cm"># np.arange(-5, 5, 0.1)</span>
+y_q = x_q**<span class="hl-num">3</span> + x_q**<span class="hl-num">2</span> + x_q + <span class="hl-num">3</span>  <span class="hl-cm"># y = x³+x²+x+3</span>
+<span class="hl-cm"># Quadratic yazımı: np.power(x, 2)</span>
+</code></pre>
+
+    <hr/>
+
+    <h2 id="knn">🔮 KNN Sınıflandırma</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.neighbors <span class="hl-kw">import</span> <span class="hl-cls">KNeighborsClassifier</span>
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing, metrics
+<span class="hl-kw">import</span> numpy <span class="hl-kw">as</span> np
+
+<span class="hl-cm"># 1. Normalizasyon (KNN için ZORUNLU)</span>
+X = preprocessing.<span class="hl-cls">StandardScaler</span>().fit_transform(X.astype(float))
+
+<span class="hl-cm"># 2. Train/Test</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="hl-num">0.2</span>, random_state=<span class="hl-num">4</span>
+)
+
+<span class="hl-cm"># 3. En iyi K'yı bul (1'den 10'a dene)</span>
+Ks = <span class="hl-num">10</span>
+mean_acc = np.zeros((Ks-<span class="hl-num">1</span>,))
+<span class="hl-kw">for</span> n <span class="hl-kw">in</span> range(<span class="hl-num">1</span>, Ks):
+    neigh = <span class="hl-cls">KNeighborsClassifier</span>(n_neighbors=n).fit(X_train, y_train)
+    yhat  = neigh.predict(X_test)
+    mean_acc[n-<span class="hl-num">1</span>] = metrics.accuracy_score(y_test, yhat)
+
+print(<span class="hl-str">'Best accuracy:'</span>, mean_acc.max(), <span class="hl-str">'at k='</span>, mean_acc.argmax()+<span class="hl-num">1</span>)
+
+<span class="hl-cm"># 4. Final model (en iyi k ile)</span>
+k = mean_acc.argmax() + <span class="hl-num">1</span>
+neigh = <span class="hl-cls">KNeighborsClassifier</span>(n_neighbors=k)
+neigh.fit(X_train, y_train)
+
+<span class="hl-cm"># 5. Tahmin</span>
+yhat = neigh.predict(X_test)
+
+<span class="hl-cm"># 6. Değerlendirme</span>
+print(<span class="hl-str">'accuracy:'</span>, metrics.accuracy_score(y_test, yhat))
+print(<span class="hl-str">'jaccard:'</span>,  jaccard_score(y_test, yhat))
+print(<span class="hl-str">'f1:'</span>,       f1_score(y_test, yhat, average=<span class="hl-str">'weighted'</span>))
+</code></pre>
+
+    <hr/>
+
+    <h2 id="dtree">🌳 Decision Tree</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.tree <span class="hl-kw">import</span> <span class="hl-cls">DecisionTreeClassifier</span>, export_graphviz
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing, metrics
+
+<span class="hl-cm"># 1. LabelEncoder — Kategorik verileri sayıya çevir</span>
+le = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+X[<span class="hl-str">'Sex'</span>]        = le.fit_transform(X[<span class="hl-str">'Sex'</span>])        <span class="hl-cm"># M/F → 1/0</span>
+X[<span class="hl-str">'BP'</span>]         = le.fit_transform(X[<span class="hl-str">'BP'</span>])         <span class="hl-cm"># LOW/NORMAL/HIGH → 0/1/2</span>
+X[<span class="hl-str">'Cholesterol'</span>] = le.fit_transform(X[<span class="hl-str">'Cholesterol'</span>]) <span class="hl-cm"># NORMAL/HIGH → 0/1</span>
+
+<span class="hl-cm"># 2. Train/Test Split</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="hl-num">0.3</span>, random_state=<span class="hl-num">3</span>
+)
+
+<span class="hl-cm"># 3. Model oluştur ve eğit</span>
+drugTree = <span class="hl-cls">DecisionTreeClassifier</span>(
+    criterion=<span class="hl-str">'entropy'</span>,   <span class="hl-cm"># 'gini' veya 'entropy'</span>
+    max_depth=<span class="hl-num">4</span>            <span class="hl-cm"># Overfitting önlemi</span>
+)
+drugTree.fit(X_train, y_train)
+
+<span class="hl-cm"># 4. Tahmin ve değerlendirme</span>
+predTree = drugTree.predict(X_test)
+print(<span class="hl-str">"Accuracy:"</span>, metrics.accuracy_score(y_test, predTree))
+
+<span class="hl-cm"># 5. Görselleştirme (ağaçı çizdir)</span>
+<span class="hl-kw">import</span> pydotplus, io
+<span class="hl-kw">from</span> sklearn.tree <span class="hl-kw">import</span> export_graphviz
+
+dot_data = io.<span class="hl-cls">StringIO</span>()
+export_graphviz(
+    drugTree, out_file=dot_data,
+    feature_names=[<span class="hl-str">'Age'</span>, <span class="hl-str">'Sex'</span>, <span class="hl-str">'BP'</span>, <span class="hl-str">'Cholesterol'</span>, <span class="hl-str">'Na_to_K'</span>],
+    class_names=drugTree.classes_,
+    filled=<span class="hl-num">True</span>, special_characters=<span class="hl-num">True</span>
+)
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+graph.write_png(<span class="hl-str">'drug_tree.png'</span>)
+</code></pre>
+
+    <hr/>
+
+    <h2 id="metrikler">📊 Metrikleri Hesaplama</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.metrics <span class="hl-kw">import</span> *
+
+y_pred = model.predict(X_test)
+
+<span class="hl-cm"># Regresyon metrikleri</span>
+print(<span class="hl-str">"MAE:"</span>,    mean_absolute_error(y_test, y_pred))
+print(<span class="hl-str">"MSE:"</span>,    mean_squared_error(y_test, y_pred))
+print(<span class="hl-str">"RMSE:"</span>,   np.sqrt(mean_squared_error(y_test, y_pred)))
+print(<span class="hl-str">"R2:"</span>,     r2_score(y_test, y_pred))
+
+<span class="hl-cm"># Classification metrikleri</span>
+print(<span class="hl-str">"Accuracy:"</span>,  accuracy_score(y_test, y_pred))
+print(<span class="hl-str">"Precision:"</span>, precision_score(y_test, y_pred))
+print(<span class="hl-str">"Recall:"</span>,    recall_score(y_test, y_pred))
+print(<span class="hl-str">"F1:"</span>,        f1_score(y_test, y_pred))
+print(<span class="hl-str">"Jaccard:"</span>,   jaccard_score(y_test, y_pred))
+
+<span class="hl-cm"># MultClass için average='weighted' kullan</span>
+print(<span class="hl-str">"F1 (multi):"</span>, f1_score(y_test, y_pred, average=<span class="hl-str">'weighted'</span>))
+
+<span class="hl-cm"># LogLoss için olasılık gerekir</span>
+y_proba = model.predict_proba(X_test)
+print(<span class="hl-str">"LogLoss:"</span>, log_loss(y_test, y_proba))
+
+<span class="hl-cm"># Confusion Matrix</span>
+print(<span class="hl-str">"Confusion:\n"</span>, confusion_matrix(y_test, y_pred))
+</code></pre>
+
+    <hr/>
+
+    <h2 id="boşluk">📝 Boşluk Doldurma — Sınav Soru Formatı</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Arkadaşı Notu: Boşluk doldurma sorusu çıkabilir!</div>
+        Aşağıdaki kodlardaki boşlukları doldurmak istenebilir. Bu kalıpları iyice öğren.
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kod Parçası</th><th>Cevap</th><th>Açıklama</th></tr></thead>
+        <tbody>
+          <tr><td><code>scaler = preprocessing._____()</code></td><td><code>StandardScaler</code></td><td>Z-score normalizasyon sınıfı</td></tr>
+          <tr><td><code>le = preprocessing._____()</code></td><td><code>LabelEncoder</code></td><td>Kategorik → Sayısal</td></tr>
+          <tr><td><code>model = _____(n_neighbors=7)</code></td><td><code>KNeighborsClassifier</code></td><td>KNN sınıflandırıcı</td></tr>
+          <tr><td><code>tree = _____(criterion='entropy')</code></td><td><code>DecisionTreeClassifier</code></td><td>Entropy ile karar ağacı</td></tr>
+          <tr><td><code>poly = _____(degree=2)</code></td><td><code>PolynomialFeatures</code></td><td>Polinom özellik dönüşümü</td></tr>
+          <tr><td><code>from scipy.optimize import _____</code></td><td><code>curve_fit</code></td><td>Non-linear optimizasyon</td></tr>
+          <tr><td><code>X_train, X_test, y_train, y_test = _____(X, y, test_size=0.2)</code></td><td><code>train_test_split</code></td><td>Veri bölme fonksiyonu</td></tr>
+          <tr><td><code>r2_score(y_test, y_hat)</code></td><td><code>r2_score</code></td><td>Regresyon doğruluk skoru</td></tr>
+          <tr><td><code>model._____(X_train, y_train)</code></td><td><code>fit</code></td><td>Model eğitimi</td></tr>
+          <tr><td><code>yhat = model._____(X_test)</code></td><td><code>predict</code></td><td>Tahmin üretme</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b7_wavelet.html">← Bölüm 7</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="sinav.html">🎯 Sınav Sayfası →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

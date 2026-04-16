@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 5 · Değerlendirme Metrikleri</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html" class="active">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">📊 Bölüm 5 · Değerlendirme Metrikleri (Evaluation)</div>
+  <h1>Model Değerlendirme<br>Metrikleri</h1>
+  <p class="subtitle">Model ne kadar iyi tahmin yaptı? Sadece "Accuracy" yeterli mi? Confusion Matrix, Precision, Recall, F1 Score, Jaccard Index ve Log Loss — hepsi burada, notlardan birebir örneklerle.</p>
+  <div class="meta">
+    <div class="meta-item">📄 Kaynak: <span>21.51.22(5-8) · 21.51.23 · 21.51.31</span></div>
+    <div class="meta-item">⏱ Okuma: <span>~20 dk</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🟡 Orta-Yüksek – Formüller ve hesaplamalar</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Bu Bölümde</div>
+    <a href="#neden">Neden Accuracy Yetmez?</a>
+    <a href="#confusion">Confusion Matrix</a>
+    <a href="#tp-tn">TP, TN, FP, FN</a>
+    <a href="#fn-tehlike">FN Neden Tehlikeli?</a>
+    <a href="#accuracy">Accuracy Formülü</a>
+    <a href="#precision">Precision</a>
+    <a href="#recall">Recall</a>
+    <a href="#f1">F1 Score</a>
+    <a href="#jaccard">Jaccard Index</a>
+    <a href="#logloss">Log Loss</a>
+    <a href="#ne-kullan">Hangi Metriği Kullan?</a>
+    <a href="#regresyon-metrik">Regresyon Metrikleri</a>
+    <a href="#kod">Kod Örnekleri</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="neden">🤔 Neden Sadece "Accuracy" Yetmez?</h2>
+
+    <p>
+      Accuracy (doğruluk oranı) genellikle akla gelen ilk metrik. Ama çoğu zaman yanıltıcıdır!
+    </p>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">Yanıltıcı Accuracy Örneği</div>
+        <p>Bir hastanede 1000 hastadan 990'ı sağlıklı, sadece 10'u kanser hastası. Model hepsine "Sağlıklı" dese:</p>
+        <p><strong>Accuracy = 990/1000 = %99</strong> — ama 10 kanser hastasının hepsini kaçırdık!</p>
+        <p>Bu model medikal açıdan tamamen işe yaramaz. O 10 hastanın yakalanması kritik.</p>
+        <p>Bu yüzden <strong>Precision, Recall ve F1 Score</strong> şarttır.</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="confusion">🔢 Confusion Matrix (Karmaşa Matrisi)</h2>
+
+    <p>Modelin ne kadar doğru, ne kadar yanlış tahmin yaptığını 2x2 matris halinde gösterir. İkili sınıf (binary) için:</p>
+
+    <div style="overflow-x:auto">
+      <div class="cm-wrap" style="margin:20px auto">
+        <div class="cm-cell cm-head"></div>
+        <div class="cm-cell cm-head">TAHMİN: Pozitif</div>
+        <div class="cm-cell cm-head">TAHMİN: Negatif</div>
+        <div class="cm-cell cm-lbl">GERÇEK: Pozitif</div>
+        <div class="cm-cell cm-tp">TP ✅<br><small>True Positive</small></div>
+        <div class="cm-cell cm-fn">FN ❌<br><small>False Negative<br>EN TEHLİKELİ!</small></div>
+        <div class="cm-cell cm-lbl">GERÇEK: Negatif</div>
+        <div class="cm-cell cm-fp">FP ❌<br><small>False Positive<br>Yanlış Alarm</small></div>
+        <div class="cm-cell cm-tn">TN ✅<br><small>True Negative</small></div>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Birebir — Özet</div>
+        "Tüm doğru tahminleri gösterir." (Yeşil kutular)<br>
+        "Accuracy: Sadece başarımı gösterir. Hatayı göstermez."
+      </div>
+    </div>
+
+    <h2 id="tp-tn">🏷 TP, TN, FP, FN Tanımları</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kısaltma</th><th>Açılım</th><th>Ne Demek?</th><th>Churn Örneği</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-green">TP</span></td>
+            <td>True Positive</td>
+            <td>Pozitif olduğunu doğru tahmin ettin</td>
+            <td>Müşteri gidecekti, sen "Gidecek" dedin ✅</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">TN</span></td>
+            <td>True Negative</td>
+            <td>Negatif olduğunu doğru tahmin ettin</td>
+            <td>Müşteri kalmak istiyordu, sen "Kalmak" dedin ✅</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-yellow">FP</span></td>
+            <td>False Positive (Tip I Hata)</td>
+            <td>Yanlış pozitif — Gerçekte negatif ama pozitif dedin</td>
+            <td>Müşteri kalacaktı ama "Gidecek" dedin ❌ (gereksiz kampanya)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-red">FN</span></td>
+            <td>False Negative (Tip II Hata)</td>
+            <td>Yanlış negatif — Gerçekte pozitif ama negatif dedin</td>
+            <td>Müşteri gidecekti, "Kalmak" dedin ❌ → Müşteri kayıp!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="fn-tehlike">🚨 Neden FN (False Negative) En Tehlikeli?</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Sınav: FN Neden Tehlikeli?</div>
+        <p><strong>Kanser tespitinde:</strong> Hasta kanserli ama model "Sağlıklı" dedi (FN). Kanser tedavisiz kaldı → hasta hayatını kaybedebilir.</p>
+        <p><strong>Churn tahmininde:</strong> Müşteri gidecekti ama model "Kalmak" dedi (FN). Müşteriye hiçbir önlem alınmadı → müşteri kayboldu.</p>
+        <p>FP durumunda ise: Sağlıklı hastaya gereksiz tetkik yaptırıldı (maliyet var ama hayatı tehlike yok).</p>
+        <p><strong>→ Genellikle FN, FP'den daha tehlikelidir.</strong></p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="accuracy">📊 Accuracy (Doğruluk)</h2>
+
+    <div class="formula-box">
+      Accuracy = (TP + TN) / (TP + TN + FP + FN)
+    </div>
+
+    <p>Tüm doğru tahminlerin oranı. Dengeli veri setlerinde güvenilir ama dengesiz setlerde yanıltıcıdır.</p>
+
+    <hr/>
+
+    <h2 id="precision">🎯 Precision (Kesinlik)</h2>
+
+    <p>
+      "Modelin POZİTİF dediği örneklerin ne kadarı GERÇEKTEN pozitif?"
+      Yanlış alarm yapmayan model Precision'u yüksektir.
+    </p>
+
+    <div class="formula-box">
+      Precision = TP / (TP + FP)
+      <br><br>
+      FP kullanılır — pozitif kararın kalitesini verir
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan — Precision Örneği</div>
+        "100 örneğin 20 tanesi pozitif:<br>
+        → 6 örneğe pozitif deyip 6'sı da pozitif olursa precision = 1 (ideal)<br>
+        → 10 örneğe pozitif deyip 9'u doğruysa precision = 0.9<br>
+        → 80 örneğe pozitif deyip sadece 5'i pozitifse precision = 5/80 = 0.0625 (kötü)"<br>
+        "Precision 78.3 → Modelin ayrılacak dediği bireylerin %78.3'ünün gerçekten ayrıldığı anlamına gelir"
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="recall">🔍 Recall (Duyarlılık / Geri Çekim)</h2>
+
+    <p>
+      "Gerçekte POZİTİF olan örneklerin ne kadarını model doğru buldu?"
+      Hiçbir pozitifi kaçırmak istemeyen sistemler Recall'u önemser (kanser tespiti!)
+    </p>
+
+    <div class="formula-box">
+      Recall = TP / (TP + FN)
+      <br><br>
+      FN kullanılır — gerçek pozitiflerin ne kadarı yakalandı
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan — Recall Örneği</div>
+        "20 pozitif örnek:<br>
+        → 20 pozitiften 19 tanesi pozitif bulunursa recall = 0.95 (iyi) ✅<br>
+        → 20 pozitiften 16 tanesi pozitif bulunursa recall = 0.80 (istenen) ✅<br>
+        → 20 pozitiften 4 tanesi pozitif bulunursa recall = 0.20 (kötü) ❌"<br>
+        "Recall %72 → Gerçekten ayrılacakların %72'sini doğru bildiği anlamına gelir"
+      </div>
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Birebir — Precision=0.86, Recall=0.40 Tam Örnek (Churn)</div>
+        <p><strong>Veriler:</strong> churn=1 olan 15 kişi (gidecek), churn=0 olan 25 kişi (kalacak). Toplam 40 kişi.</p>
+        <p>TP=6 (6 tanesi "gidecek" olarak doğru tahmin edildi) | FP=1 (gitmeyecek olan 1 kişi "gidecek" dendi) | FN=9 (gidecek olan 9 kişi "kalmak" dendi)</p>
+
+        <h4 style="color:var(--yellow-light);margin:10px 0 6px">Precision Hesabı:</h4>
+        <div class="formula-box" style="margin:6px 0">
+          Precision = TP / (TP + FP) = 6 / (6 + 1) = 6/7 ≈ <strong>0.86</strong>
+        </div>
+        <p>→ TP=6: 6 tanesini "gidecek" olarak doğru bilmiş.<br>
+        → FP=1: Gitmeyecek olan 1 tanesini "gidecek" olarak yanlış bilmiş.<br>
+        → 6 doğrusu 1 yanlışı var → <strong>Precision = 0.86 oranında doğru tahmin edilmiş.</strong></p>
+        <p><em>İyi tutturmuş ama seçici davranmış.</em></p>
+
+        <h4 style="color:var(--yellow-light);margin:10px 0 6px">Recall Hesabı:</h4>
+        <div class="formula-box" style="margin:6px 0">
+          Recall = TP / (TP + FN) = 6 / (6 + 9) = 6/15 = <strong>0.40</strong>
+        </div>
+        <p>→ 15 gerçek churn'ün 6 tanesinin model tarafından doğru tahmin edildiği, çıkarılırsa 9 tanesi yanlış tahmin edildi.</p>
+
+        <h4 style="color:var(--yellow-light);margin:10px 0 6px">Sonuç ve Yorum:</h4>
+        <p>Precision: 0.86 &nbsp;&nbsp; Recall: 0.40</p>
+        <p>Precision yüksek, recall düşük çıktı. Sorun: Model az tahmin yapmış. Ya da model seçici tahmin yapmış. Yani, model churn dediklerini doğru tahmin etse de seçici davranarak churn'lerin çoğunu ıskalamış. (churn değil dileyerek)</p>
+        <p>→ Bunun aksine precision ve recall dengeli olmalı. Bu dengeyi ölçmek için precision ve recall'ın harmonik ortalaması olan <strong>F1-score kullanılır.</strong></p>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>Recall yüksek, Precision düşük → </h4>
+        <p style="font-size:13px">Çok fazla örneği pozitif tahmin eder, her gerçek pozitifi yakalar ama çok yanlış pozitif üretir. "<em>Model çok seçici davranır, yanlış pozitif azdır ama birçok gerçek örneği kaçırır.</em>"</p>
+      </div>
+      <div class="mini-card">
+        <h4>Precision yüksek, Recall düşük → </h4>
+        <p style="font-size:13px">Pozitif dediğinde haklıdır ama çok az pozitif tahmin yapar, pek çok gerçek pozitifi kaçırır. "<em>Azını biliyor ama tam biliyor.</em>"</p>
+      </div>
+    </div>
+
+    <p>İkisi birbirine yakın olursa "dengeli" denir. Bu dengeyi ölçmek için F1 Score kullanılır.</p>
+
+    <hr/>
+
+    <h2 id="f1">⚖️ F1 Score (Harmonik Ortalama)</h2>
+
+    <p>
+      Precision ve Recall'un harmonik ortalamasını alarak genel başarıyı tek bir sayıyla ifade eder. İkisi de önemliyse F1 kullanılır.
+    </p>
+
+    <div class="formula-box">
+      F1 Score = 2 × (Precision × Recall) / (Precision + Recall)
+    </div>
+
+    <div class="callout">
+      Neden harmonik ortalama? Aritmetik ortalama yanıltabilir. Precision=1.0, Recall=0.0 olsa aritmetik ortalama 0.5 çıkar ama aslında model berbat. Harmonik ortalama bu durumda 0 verir — daha doğru!
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Precision</th><th>Recall</th><th>Aritmetik Ort.</th><th>F1 Score (Harmonik)</th></tr></thead>
+        <tbody>
+          <tr><td>0.9</td><td>0.9</td><td>0.90</td><td>0.90</td></tr>
+          <tr><td>1.0</td><td>0.5</td><td>0.75</td><td>0.67</td></tr>
+          <tr><td>1.0</td><td>0.0</td><td>0.50</td><td><strong>0.00</strong> ← Daha doğru!</td></tr>
+          <tr><td>0.78</td><td>0.72</td><td>0.75</td><td>0.75</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Birebir — F1 Score = 0.55 Tam Örnek (Churn → Precision:0.86, Recall:0.40)</div>
+        <div class="formula-box" style="margin:8px 0">
+          F1 = 2 × (0.86 × 0.40) / (0.86 + 0.40) = 2 × 0.344 / 1.26 ≈ <strong>0.55</strong>
+        </div>
+        <p><strong>F1-Score = 0.55 → Düşük</strong> (1'e yakın olması istenir)</p>
+        <p><strong>Nottan yorum:</strong></p>
+        <ul>
+          <li>Precision ve recall arasında fark olduğunda F1-score düşük çıkar.</li>
+          <li>Precision ve recall'ın ikisi de yüksek olduğunda F1-score da yüksek çıkar (sorun yok).</li>
+          <li>Precision ve recall'ın dengeli olması istenir. Ancak her ikisi de 0.40 ve 0.43 gibi dengeli ve düşük değerler olduğunda F1-score nasıl yorumlanır?</li>
+          <li>→ Model hem seçici hem de tahminlerinin yarısı hatalı, 4. katmanı yapılabilir.</li>
+          <li>→ Modelin "dengeli" ama "zayıf" performans sergilediği anlamına gelir.</li>
+          <li>→ Normal şartlarda F1-score'un 1'e yakın olması istenir. Burada ise yaklaşık olarak 0.41 gibi düşük bir değerdir.</li>
+        </ul>
+        <p><strong>Önemli:</strong> Precision ve recall negatif olamaz (0 ile 1 arasındadır).</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="jaccard">📐 Jaccard Index (Benzerlik Ölçümü)</h2>
+
+    <p>Gerçek ve tahmin edilen kümeler arasındaki benzerliği ölçer. 1'e yakın olması iyidir. Tahmin edilen değer 1 ya da 0'dır (binary classification için).</p>
+
+    <div class="formula-box">
+      Jaccard(y, ŷ) = |y ∩ ŷ| / |y ∪ ŷ|
+                    = |y ∩ ŷ| / (|y| + |ŷ| − |y ∩ ŷ|)
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Birebir — Jaccard Örneği (8 Örnek, Ortak Veri)</div>
+        <p>y = [0,0,1,1,0,1,1,0,1] (gerçek değerler) → ortak veri sayı = 8<br/>
+        ŷ = [1,1,1,1,0,1,1,0,1] (tahmin edilen değerler)</p>
+        <p><strong>Tüm veriler ortak olayda Jaccard index = 1 olurdu</strong> (tahminlerin hepsi doğru olsaydı).<br/>
+        Tahminlerin tamamı yanlış olsaydı Jaccard index = 0 olurdu.</p>
+        <p>Formül ile: |y ∩ ŷ| = 6 (ortak doğrular), |y ∪ ŷ| = 8+8-6 = 10<br/>
+        J = 6/10 = <strong>0.6</strong></p>
+        <p><strong>Jaccard Index → Farklı</strong> (tahmin değerleri 0-1-0-1 gibi): 0-1-0 (farklı değerleri ortadan kaldırır.<br/>
+        <strong>LogLoss → Olasılık değeri verir.</strong></p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="logloss">📉 Log Loss (Logaritmik Kayıp)</h2>
+
+    <p>
+      Model 0-1 arası olasılık değerleri üretir ve bu olasılıkların ne kadar doğru olduğunu ölçer. Küçük LogLoss = iyi model.
+    </p>
+
+    <div class="formula-box">
+      LogLoss = −(1/n) · Σ[y · log(ŷ) + (1−y) · log(1−ŷ)]
+      <br><br>
+      LogLoss → 0.0: Mükemmel tahmin<br>
+      LogLoss → 1.0: Kötü tahmin (Higher Accuracy = Lower LogLoss)
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan — LogLoss Tablosu Örneği</div>
+        <div class="table-wrap" style="margin:8px 0">
+          <table>
+            <thead><tr><th>Churn (Gerçek)</th><th>Predicted Churn (Tahmin)</th><th>LogLoss</th><th>Yorum</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>0.91 (iyi)</td><td>0.11</td><td>✅ Gerçeğe yakın → Düşük LogLoss</td></tr>
+              <tr><td>1</td><td>0.13 (kötü)</td><td>2.4</td><td>❌ Müşteri gidecekti, tahmin kötü → Yüksek LogLoss</td></tr>
+              <tr><td>0</td><td>0.04 (iyi)</td><td>0.04</td><td>✅ Kalmak isteyene yakın tahmin</td></tr>
+              <tr><td>0</td><td>0.23</td><td>0.26</td><td>Orta</td></tr>
+              <tr><td>0</td><td>0.43</td><td>0.56</td><td>Kötü (orta)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        "Predicted churn değeri, churn'e yakın çıktığında LogLoss düşer."<br>
+        "Ancak predicted churn ile churn arasında büyük fark varsa bu hatayı artırır ve LogLoss yükselir (bkz: 2.4)"
+      </div>
+    </div>
+
+    <p><strong>LogLoss ne zaman kullanılmalı?</strong> 0.49 ile 0.001 gibi ince farklar önemliyse. "LogLoss, sınıflandırma modelinin tahminlerinin kalitesini ifade eder."</p>
+
+    <hr/>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan — Churn Örneği ile Confusion Matrix Sayıları</div>
+        <p>churn=1 olan 15 kişi var (gidecek, 15 kişi), churn=0 olan 25 kişi var (kalacak).</p>
+        <p>TP + FN = 6 + 9 = 15 (Gidecekler — churn=1 olanlar)<br/>
+        TN + FP = 25 (Kalacaklar — churn=0 olanlar)</p>
+        <p>Diagonal'daki değerlerin yüksek olması başarımın yüksek olduğunu gösterir.<br/>
+        churn=1, 2 sınıf var → 2×2 matrix olur | 5 sınıf olsaydı → 5×5 matrix olurdu.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">Churn Örneği — Confusion Matrix Tablosu (Nottan)</div>
+        <div class="table-wrap" style="margin:8px 0">
+          <table>
+            <thead><tr><th>Gerçek</th><th>Tahmin</th><th>Sonuç</th></tr></thead>
+            <tbody>
+              <tr><td>Müşteri gidecek</td><td>Müşteri gidecek</td><td>Model doğru tahmin etti (TP)</td></tr>
+              <tr><td>Müşteri gitmeyecek</td><td>Müşteri gitmeyecek</td><td>Model doğru tahmin etti (TN)</td></tr>
+              <tr><td>Müşteri gitmeyecek</td><td>Müşteri gidecek</td><td>Model yanlış tahmin etti (FP)</td></tr>
+              <tr><td>Müşteri gidecek</td><td>Müşteri gitmeyecek</td><td>Model yanlış tahmin etti (FN) ← En kötüsü</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <strong>Bu hata daha önemli:</strong> Gidecek müşteriyi tahmin edip onu ikna etmeye çalışmadan müşteri kaybedildi.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="ne-kullan">🤔 Hangi Metriği Ne Zaman Kullan?</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Durum</th><th>Kullan</th><th>Neden?</th></tr></thead>
+        <tbody>
+          <tr><td>Dengeli veri seti, genel değerlendirme</td><td><strong>Accuracy</strong></td><td>Basit ve anlaşılır</td></tr>
+          <tr><td>Dengesiz veri (99 sağlıklı, 1 hasta)</td><td><strong>F1 Score</strong></td><td>Precision+Recall'u dengeler</td></tr>
+          <tr><td>Yanlış pozitifi azaltmak istiyorsun</td><td><strong>Precision</strong></td><td>Spam filtreleme</td></tr>
+          <tr><td>Hiçbir pozitifi kaçırmak istemiyorsun</td><td><strong>Recall</strong></td><td>Kanser tespiti, güvenlik</td></tr>
+          <tr><td>0-1 olasılık tahminlerinin kalitesi</td><td><strong>LogLoss</strong></td><td>0.49 vs 0.001 fark önemliyse</td></tr>
+          <tr><td>Küme benzerliği ölçmek istiyorsun</td><td><strong>Jaccard</strong></td><td>Binary classification</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="regresyon-metrik">📈 Regresyon Metrikleri (Hatırlatma)</h2>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>MSE (Mean Squared Error)</h4>
+        <div class="formula-box" style="font-size:12px;margin:6px 0">MSE = (1/n) · Σ(yᵢ − ŷᵢ)²</div>
+        <p style="font-size:12px;color:var(--muted)">Küçük → iyi. Kare alındığı için büyük hatalar abartılır.</p>
+      </div>
+      <div class="mini-card">
+        <h4>MAE (Mean Absolute Error)</h4>
+        <div class="formula-box" style="font-size:12px;margin:6px 0">MAE = (1/n) · Σ|yᵢ − ŷᵢ|</div>
+        <p style="font-size:12px;color:var(--muted)">Mutlak değer alınır. Outlier'lara daha az duyarlı.</p>
+      </div>
+      <div class="mini-card">
+        <h4>R² Score</h4>
+        <div class="formula-box" style="font-size:12px;margin:6px 0">R² = 1 − RSE</div>
+        <p style="font-size:12px;color:var(--muted)">1'e yakın → iyi. Modelin açıklayıcılık oranı.</p>
+      </div>
+      <div class="mini-card">
+        <h4>Hangi Kullan?</h4>
+        <p style="font-size:13px">Regresyon → MSE, MAE, R² (Nottan: "MSE, R², Acc bilinmeli")</p>
+        <p style="font-size:13px">Classification → Confusion Matrix, Precision, Recall, F1, Jaccard, LogLoss</p>
+      </div>
+    </div>
+
+    <h2 id="kod">💻 Kod Örnekleri</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.metrics <span class="hl-kw">import</span> (
+    accuracy_score, precision_score, recall_score,
+    f1_score, jaccard_score, log_loss, confusion_matrix
+)
+
+<span class="hl-cm"># Tahminler</span>
+y_pred = model.predict(X_test)
+
+<span class="hl-cm"># Temel metrikler</span>
+print(<span class="hl-str">"Accuracy:"</span>,   accuracy_score(y_test, y_pred))
+print(<span class="hl-str">"Precision:"</span>,  precision_score(y_test, y_pred))
+print(<span class="hl-str">"Recall:"</span>,     recall_score(y_test, y_pred))
+print(<span class="hl-str">"F1 Score:"</span>,   f1_score(y_test, y_pred))
+print(<span class="hl-str">"Jaccard:"</span>,    jaccard_score(y_test, y_pred))
+
+<span class="hl-cm"># LogLoss için olasılık değerleri gerekir</span>
+y_proba = model.predict_proba(X_test)
+print(<span class="hl-str">"Log Loss:"</span>, log_loss(y_test, y_proba))
+
+<span class="hl-cm"># Confusion Matrix</span>
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+<span class="hl-cm">'''
+[[TN, FP],
+ [FN, TP]]
+'''</span>
+
+<span class="hl-cm"># Regresyon metrikleri</span>
+<span class="hl-kw">from</span> sklearn.metrics <span class="hl-kw">import</span> mean_absolute_error, mean_squared_error, r2_score
+print(<span class="hl-str">"MAE:"</span>,     mean_absolute_error(y_test, y_pred))
+print(<span class="hl-str">"MSE:"</span>,     mean_squared_error(y_test, y_pred))
+print(<span class="hl-str">"R² Score:"</span>, r2_score(y_test, y_pred))</code></pre>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Accuracy vs F1 Score — Fark Nedir? (Nottan)</div>
+        <div class="table-wrap" style="margin:8px 0">
+          <table>
+            <thead><tr><th>Metrik</th><th>Ne Sorar?</th><th>Ne Zaman Yeterli?</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Accuracy</strong></td><td>"100 tahminimin kaçı doğru?"</td><td>Tüm modeli değerlendirir. Dengeli veri setinde. Dengesiz veri setinde çok sonuç verir → modelin tahminlerini açıklamaz (1 hasta 99 sağlıklı → 99% accuracy mümkün ama model işe yaramaz)</td></tr>
+              <tr><td><strong>F1 Score</strong></td><td>"Doğru dediklerinde ne kadar haklısın ve kayırdığın bir şey var mı?"</td><td>Dengesiz veri setinde daha doğru sonuç verir. FN ve FP gibi kritik hataların bilgisini verir. (Modelin yanlış bildikleri hakkında bilgi verir)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bölüm 5 Sınav Özeti</div>
+        <ul>
+          <li>TP=Doğru pozitif, TN=Doğru negatif, FP=Yanlış alarm, FN=Kaçırılan pozitif</li>
+          <li>FN genellikle EN TEHLİKELİ hatadır (kanser kaçırılır, churn müşteri kaybedilir)</li>
+          <li>Accuracy = (TP+TN)/(TP+TN+FP+FN) — dengeli veri için</li>
+          <li>Precision = TP/(TP+FP) → FP kullanılır | Recall = TP/(TP+FN) → FN kullanılır</li>
+          <li>F1 = 2×(P×R)/(P+R) — harmonik ortalama</li>
+          <li>LogLoss → 0 iyi, küçük olması daha iyi — olasılık bazlı</li>
+          <li>Jaccard = |y∩ŷ| / (|y|+|ŷ|-|y∩ŷ|) — binary classification</li>
+          <li><strong>Precision, Recall ve F1 Score'un import edildiği bilinmeli!</strong></li>
+          <li>Churn: TP+FN=15 (gidecek), TN+FP=25 (kalacak)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b4_knn.html">← Bölüm 4</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="b6_dtree.html">Bölüm 6: Decision Tree →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

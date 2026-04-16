@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 7 · Wavelet Transform</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html" class="active">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">🌊 Bölüm 7 · Wavelet Transform</div>
+  <h1>Wavelet Transform<br><span style="font-size:0.6em;color:#8b949e">Dalgacık Dönüşümü</span></h1>
+  <p class="subtitle">Veri sıkıştırma tekniği. Wavelet Transform, ham veriyi sıkıştırmak ve önemli bilgileri korumak için kullanılır. Notlardan tam hesaplama örneği (16 değer, 4 seviye).</p>
+  <div class="meta">
+    <div class="meta-item">📄 Kaynak: <span>21.51.32(4-5) · 21.51.32(6) — Wavelet devam sayfaları</span></div>
+    <div class="meta-item">⏱ Okuma: <span>~15 dk</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🔴 Çok Önemli — 3 konudan birer soru: Quantile-plot, Wavelet, Decision Tree IG</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Bu Bölümde</div>
+    <a href="#nedir">Wavelet Nedir?</a>
+    <a href="#neden">Neden Kullanılır?</a>
+    <a href="#formul">a ve d Formülleri</a>
+    <a href="#adim">Adım Adım Örnek (8 Değer)</a>
+    <a href="#buyuk">Büyük Örnek (16 Değer — Nottan!)</a>
+    <a href="#sikistirma">Sıkıştırma Yöntemleri</a>
+    <a href="#genel">Genel Tablo</a>
+    <a href="#ozet">Sınav Özeti</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="nedir">🌊 Wavelet Transform Nedir?</h2>
+    <p>
+      Wavelet Transform (Dalgacık Dönüşümü), bir veri dizisini <strong>daha küçük ve öz bir forma</strong> dönüştüren matematiksel bir tekniklerdir. Orijinal verinin en önemli bilgisini tutarken boyutunu azaltır.
+    </p>
+
+    <div class="callout">
+      Analoji: 1000 sayfalık bir kitabı 100 sayfaya sıkıştırıyorsun ama ana fikirler hâlâ içinde. Wavelet Transform, sayısal veride bunu yapar — önemli bilgiyi "ortalama" olarak saklar, geri kalanı "ayrıntı (detail)" olarak.
+    </div>
+
+    <h2 id="neden">🔍 Neden Kullanılır?</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <h4>Veri Sıkıştırma</h4>
+        <p>Büyük veri setleri küçültülür. Makine öğrenmesi modelleri daha hızlı çalışır.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📸</div>
+        <h4>Görüntü İşleme</h4>
+        <p>JPEG 2000 formatı wavelet kullanır. Görüntü kalitesini koruyarak dosya boyutunu azaltır.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h4>Feature Extraction</h4>
+        <p>Zaman serilerinden özellik çıkarmak için kullanılır. Özellikle biyomedikal sinyallerde (EEG, EKG).</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔊</div>
+        <h4>Gürültü Azaltma</h4>
+        <p>Ses işaretlerinden gürültü temizleme. MP3 gibi ses sıkıştırma formatlarında kullanılır.</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="formul">📐 Wavelet Formülleri — a ve d</h2>
+
+    <p>Notlarda öğretilen en basit Wavelet (Haar Wavelet), her adımda iki işlem yapar:</p>
+
+    <div class="formula-box">
+      a = (x₁ + x₂) / 2    ← Ortalama değer (average / approximation)
+      d = (x₁ − x₂) / 2    ← Fark değeri (detail / difference)
+    </div>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>a (Average / Ortalama)</h4>
+        <p style="font-size:13px">İki değerin ortalamasıdır. <strong>Bilginin özünü</strong> saklar. Bir sonraki seviyeye bu değer taşınır.</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">Bu değer bir sonraki adımda yeniden dönüşüme girer.</p>
+      </div>
+      <div class="mini-card">
+        <h4>d (Detail / Fark)</h4>
+        <p style="font-size:13px">İki değerin farkının yarısıdır. <strong>Ayrıntı bilgisini</strong> saklar. Bir kenara depolanır.</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">Bu değer yeniden işlenmez, depolanır. Geri dönüşüm için kullanılabilir.</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="adim">🔢 Adım Adım Hesaplama Örneği</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Sınav: Wavelet Hesaplama — Tam Örnek</div>
+        <p><strong>Başlangıç verisi:</strong> [4, 6, 10, 2, 8, 4, 6, 2]</p>
+        <p><em>(8 element = 2³ → 3 seviye dönüşüm olur)</em></p>
+
+        <h3 style="color:var(--accent-light);margin:14px 0 8px">🔹 Seviye 1 — Her İkili için a ve d Hesabı</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a = (x₁+x₂)/2</th><th>d = (x₁-x₂)/2</th></tr></thead>
+            <tbody>
+              <tr><td>1. çift</td><td>4</td><td>6</td><td>(4+6)/2 = <strong>5</strong></td><td>(4-6)/2 = <strong>-1</strong></td></tr>
+              <tr><td>2. çift</td><td>10</td><td>2</td><td>(10+2)/2 = <strong>6</strong></td><td>(10-2)/2 = <strong>4</strong></td></tr>
+              <tr><td>3. çift</td><td>8</td><td>4</td><td>(8+4)/2 = <strong>6</strong></td><td>(8-4)/2 = <strong>2</strong></td></tr>
+              <tr><td>4. çift</td><td>6</td><td>2</td><td>(6+2)/2 = <strong>4</strong></td><td>(6-2)/2 = <strong>2</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Seviye 1 sonunda: a değerleri = [5, 6, 6, 4] | d değerleri = [-1, 4, 2, 2]</p>
+        <p>d değerleri saklanır. a değerleri bir sonraki seviyeye taşınır.</p>
+
+        <h3 style="color:var(--accent-light);margin:14px 0 8px">🔹 Seviye 2 — [5, 6, 6, 4] üzerinde</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a</th><th>d</th></tr></thead>
+            <tbody>
+              <tr><td>1. çift</td><td>5</td><td>6</td><td>(5+6)/2 = <strong>5.5</strong></td><td>(5-6)/2 = <strong>-0.5</strong></td></tr>
+              <tr><td>2. çift</td><td>6</td><td>4</td><td>(6+4)/2 = <strong>5</strong></td><td>(6-4)/2 = <strong>1</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Seviye 2 sonunda: a = [5.5, 5] | d = [-0.5, 1]</p>
+
+        <h3 style="color:var(--accent-light);margin:14px 0 8px">🔹 Seviye 3 — [5.5, 5] üzerinde</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a</th><th>d</th></tr></thead>
+            <tbody>
+              <tr><td>1. çift</td><td>5.5</td><td>5</td><td>(5.5+5)/2 = <strong>5.25</strong></td><td>(5.5-5)/2 = <strong>0.25</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Seviye 3 sonunda: a = [5.25] | d = [0.25]</p>
+
+        <h3 style="color:var(--green-light);margin:14px 0 8px">✅ Sonuç — Özet Temsil</h3>
+        <div class="formula-box" style="margin:8px 0">
+          Özet: [<strong>5.25</strong>] &nbsp;←&nbsp; Tüm 8 değerin özeti TEK sayı!
+          Detaylar (geri dönüşüm için): [0.25, -0.5, 1, -1, 4, 2, 2]
+        </div>
+        <p>8 eleman → 1 özet değer + 7 detay = veri sıkıştırıldı!</p>
+      </div>
+    </div>
+
+    <h2 id="buyuk">🔢 Büyük Örnek — 16 Değer (Nottan Birebir!)</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Sınavda Bu Örnek Sorulabilir! (Nottan alınan gerçek örnek)</div>
+        <p><strong>Başlangıç verisi (16 eleman):</strong><br>
+        x = {10, 11, 12, 13, 14, 15, 16, 17, 10, 20, 9, 21, 8, 22, 7, 23}</p>
+        <p><em>Not: Wavelet transform'da veri sayısının 2<sup>n</sup> olması gerekir. 16 = 2⁴ → 4 seviye dönüşüm olabilir.</em></p>
+      </div>
+    </div>
+
+    <h3>🔹 Seviye 1 — 16 değerden 8 çift oluşturulur</h3>
+    <p>Veri çiftleri: (10,11), (12,13), (14,15), (16,17), (10,20), (9,21), (8,22), (7,23)</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a = (x₁+x₂)/2</th><th>d = (x₁-x₂)/2</th></tr></thead>
+        <tbody>
+          <tr><td>(10,11)</td><td>10</td><td>11</td><td>10.5</td><td>-0.5</td></tr>
+          <tr><td>(12,13)</td><td>12</td><td>13</td><td>12.5</td><td>-0.5</td></tr>
+          <tr><td>(14,15)</td><td>14</td><td>15</td><td>14.5</td><td>-0.5</td></tr>
+          <tr><td>(16,17)</td><td>16</td><td>17</td><td>16.5</td><td>-0.5</td></tr>
+          <tr><td>(10,20)</td><td>10</td><td>20</td><td>15</td><td>-5</td></tr>
+          <tr><td>(9,21)</td><td>9</td><td>21</td><td>15</td><td>-6</td></tr>
+          <tr><td>(8,22)</td><td>8</td><td>22</td><td>15</td><td>-7</td></tr>
+          <tr><td>(7,23)</td><td>7</td><td>23</td><td>15</td><td>-8</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula-box">
+      A₁ = {10.5, 12.5, 14.5, 16.5, 15, 15, 15, 15}<br/>
+      D₁ = {-0.5, -0.5, -0.5, -0.5, -5, -6, -7, -8}
+    </div>
+
+    <h3>🔹 Seviye 2 — A₁'den 4 çift oluşturulur</h3>
+    <p>Çiftler: (10.5, 12.5), (14.5, 16.5), (15, 15), (15, 15)</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a</th><th>d</th></tr></thead>
+        <tbody>
+          <tr><td>(10.5, 12.5)</td><td>10.5</td><td>12.5</td><td>11.5</td><td>-1</td></tr>
+          <tr><td>(14.5, 16.5)</td><td>14.5</td><td>16.5</td><td>15.5</td><td>-1</td></tr>
+          <tr><td>(15, 15)</td><td>15</td><td>15</td><td>15</td><td>0</td></tr>
+          <tr><td>(15, 15)</td><td>15</td><td>15</td><td>15</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula-box">
+      A₂ = {11.5, 15.5, 15, 15}<br/>
+      D₂ = {-1, -1, 0, 0}
+    </div>
+
+    <h3>🔹 Seviye 3 — A₂'den 2 çift oluşturulur</h3>
+    <p>Çiftler: (11.5, 15.5), (15, 15)</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a</th><th>d</th></tr></thead>
+        <tbody>
+          <tr><td>(11.5, 15.5)</td><td>11.5</td><td>15.5</td><td>13.5</td><td>-2</td></tr>
+          <tr><td>(15, 15)</td><td>15</td><td>15</td><td>15</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula-box">
+      A₃ = {13.5, 15}<br/>
+      D₃ = {-2, 0}
+    </div>
+
+    <h3>🔹 Seviye 4 — A₃'ten 1 çift</h3>
+    <p>Çift: (13.5, 15)</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Çift</th><th>x₁</th><th>x₂</th><th>a</th><th>d</th></tr></thead>
+        <tbody>
+          <tr><td>(13.5, 15)</td><td>13.5</td><td>15</td><td>14.25</td><td>-0.75</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula-box">
+      <strong>A₄ = {14.25} ← Tüm verinin özeti TEK sayı!</strong><br/>
+      D₄ = {-0.75}
+    </div>
+
+    <h3>✅ Sonuç — w = {A₄, D₄, D₃, D₂, D₁}</h3>
+    <div class="formula-box">
+      w = {14.25, -0.75, -2, 0, -1, -1, 0, 0, -0.5, -0.5, -0.5, -0.5, -5, -6, -7, -8}
+    </div>
+
+    <hr/>
+
+    <h2 id="sikistirma">🗜️ Dönüşüm Sonrası Sıkıştırma Yöntemleri (Nottan)</h2>
+
+    <p>Elde edilen w vektöründen önemsiz bilgiler atılarak sıkıştırma yapılır. 2 yöntem mevcuttur:</p>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>1. Yöntem — 0 Varsa Bellege Kaydetme</h4>
+        <p style="font-size:13px">0 değeri içeren detay (d) katsayıları veri depolamaya yer kapladığından belleğe kaydedilemez / atılır.<br/>
+        <em>Örnek: D₂'de {-1, -1, 0, 0} → 0'lar bellege kaydedilmez.</em></p>
+      </div>
+      <div class="mini-card">
+        <h4>2. Yöntem — θ₁ Kaldır (Küçük Sayılar)</h4>
+        <p style="font-size:13px">Küçük d değerleri (0'a yakın) kaldırılır. Büyük sayılar veri kaybı yaratacağından kaldırılamaz.<br/>
+        <em>Örnek: -0.5 değerleri küçük olduğundan kaldırılabilir.</em></p>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">Sıkıştırma Neden Mümkün?</div>
+        Veri sıkıştırmada dönüşüm sonrası elde edilen küçük değerler (0'a yakın) kaldırılarak önemsiz bilgiler azaltılır. Böylece verinin daha az yer kaplaması sağlanır.
+      </div>
+    </div>
+
+    <h2 id="genel">📊 Genel Tablo Formatı</h2>
+
+    <p>Notlarda görülen tablo formatı — sınav sorusu bunu isteyebilir:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Seviye</th><th>Giriş (a değerleri)</th><th>Yeni a</th><th>Yeni d (Saklanır)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0 (Ham)</td><td>[4, 6, 10, 2, 8, 4, 6, 2]</td><td>—</td><td>—</td></tr>
+          <tr><td>1</td><td>[4,6] [10,2] [8,4] [6,2]</td><td>[5, 6, 6, 4]</td><td>[-1, 4, 2, 2]</td></tr>
+          <tr><td>2</td><td>[5,6] [6,4]</td><td>[5.5, 5]</td><td>[-0.5, 1]</td></tr>
+          <tr><td>3</td><td>[5.5, 5]</td><td>[5.25]</td><td>[0.25]</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body">
+        <div class="alert-title">Formülleri Hatırlamak İçin</div>
+        <p>a = Addition / Average → Toplama ve bölme (ortalama)</p>
+        <p>d = Difference → Çıkarma ve bölme (fark)</p>
+        <p>Her ikisi de 2'ye bölünür! Bu Haar Wavelet'in temelidir.</p>
+      </div>
+    </div>
+
+    <h2 id="ozet">🚨 Sınav Özeti</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bölüm 7 Sınav Özeti — 3 Konudan Birer Soru Çıkabilir!</div>
+        <ul>
+          <li>a = (x₁ + x₂) / 2 → Ortalama, bir sonraki seviyeye taşınır</li>
+          <li>d = (x₁ − x₂) / 2 → Fark, saklanır (bellekte tutulur)</li>
+          <li>Her adımda veri yarıya iner — 16 eleman → 4 seviyede 1 özet değere düşer</li>
+          <li>n elemanlı veri → log₂(n) adımda tek özet değere düşer</li>
+          <li>Dönüşüm sonrası sıkıştırma: 0 olanlar kaldırılır VEYA küçük (threshold) değerler atılır</li>
+          <li>Wavelet = Veri sıkıştırma (compression) + Feature extraction</li>
+          <li><strong>Bu hafta 3 konu önemli:</strong> Quantile-plot outlier, Wavelet sıkıştırma, Decision Tree entropy/IG</li>
+          <li>3 konudan birer soru gelir — kök düğüme yazılacak özelliği belirlemek için IG hesaplanır</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b6_dtree.html">← Bölüm 6</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="b8_kod.html">Bölüm 8: Kod Referansı →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 6 · Karar Ağaçları & Entropy</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .entropy-box {
+      background: #020407; border: 1px solid #2a2d3e;
+      border-left: 3px solid var(--yellow); border-radius: 8px;
+      padding: 18px 22px; margin: 16px 0; font-family: 'Fira Code', monospace;
+      font-size: 13px; color: #fbbf24; line-height: 2.2;
+    }
+    .ig-highlight {
+      background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 8px; padding: 16px; margin: 12px 0;
+    }
+    .tree-vis {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 24px;
+      font-family: 'Fira Code', monospace; font-size: 13px;
+      line-height: 2; margin: 16px 0; text-align: center;
+    }
+    .node-r { display: inline-block; background: rgba(210,153,34,0.15); border: 2px solid #d29922; border-radius: 8px; padding: 8px 18px; color: #fbbf24; font-weight: 700; }
+    .node-q { display: inline-block; background: rgba(56,139,253,0.1); border: 1px solid #388bfd; border-radius: 8px; padding: 6px 14px; color: #79c0ff; font-size: 12px; }
+    .node-l { display: inline-block; background: rgba(63,185,80,0.1); border: 1px solid #3fb950; border-radius: 6px; padding: 5px 12px; color: #56d364; font-size: 11px; font-weight: 600; }
+    .connector { color: #8b949e; margin: 0 8px; }
+    .branch-row { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html" class="active">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">🌳 Bölüm 6 · Karar Ağaçları — SINAV KRİTİK!</div>
+  <h1>Decision Tree &<br>Entropy Hesaplama</h1>
+  <p class="subtitle">Karar ağacı nasıl çalışır? Hunt's algoritması nedir? Entropy ve Information Gain nasıl hesaplanır? Tenis veri seti üzerinde adım adım tam hesaplama — soru çıkabilecek kritik konu!</p>
+  <div class="meta">
+    <div class="meta-item">📄 Kaynak: <span>21.51.32(3) · 21.51.32(4) — Karar Ağacı sayfaları</span></div>
+    <div class="meta-item">⏱ Okuma: <span>~35 dk</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🔴 Çıkabilir — Entropy hesaplama + Information Gain!</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Bu Bölümde</div>
+    <a href="#nedir">Decision Tree Nedir?</a>
+    <a href="#yapi">Ağaç Yapısı</a>
+    <a href="#hunts">Hunt's Algoritması</a>
+    <a href="#entropy">Entropy Nedir?</a>
+    <a href="#entropy-formul">Entropy Formülü</a>
+    <a href="#info-gain">Information Gain</a>
+    <a href="#tenis">Tenis Veri Seti</a>
+    <a href="#tenis-hesap">Tam Hesaplama</a>
+    <a href="#gini">Gini Index</a>
+    <a href="#overfitting">Overfitting & Pruning</a>
+    <a href="#missing">Missing Data</a>
+    <a href="#kod">Kod Örnekleri</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="nedir">🌳 Decision Tree (Karar Ağacı) Nedir?</h2>
+
+    <p>
+      Decision Tree, <strong>ağaç yapısında sorular sorarak</strong> veriyi sınıflandıran veya regresyon yapan bir algoritmdır. Her düğümde bir özelliğe bakılır ve soru sorulur. Yanıt sizi bir alt dala götürür. En sonunda yaprak düğüme ulaşıldığında tahmin verilir.
+    </p>
+
+    <div class="callout">
+      Analoji: "Dışarıya çıkayım mı?" sorusunu kendine soruyorsun. "Hava güneşli mi?" → Evet → "Yorgun muyum?" → Hayır → <strong>"Evet, çık!"</strong>. Bu tam olarak bir Decision Tree mantığı!
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Birebir</div>
+        "Decision Tree: Veriden alınan eğitim bilgisi ile bir iç yapı (tree) oluşturulur. Bu yapı üzerinden veri kümesi daha küçük boyutlara bölünür."
+      </div>
+    </div>
+
+    <h2 id="yapi">📐 Ağaç Yapısı</h2>
+
+    <div class="tree-vis">
+      <div><span class="node-r">🌱 Root Node (Kök)</span></div>
+      <div style="color:#8b949e;margin:8px 0">En başta sorulan soru — en bilgi verici özellik seçilir</div>
+      <div style="margin:8px 0">↓ Evet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓ Hayır</div>
+      <div class="branch-row">
+        <div>
+          <div><span class="node-q">Internal Node</span></div>
+          <div style="color:#8b949e;font-size:12px;margin:6px 0">Ara soru (dal üzerindeki)</div>
+          <div>↓ Evet &nbsp;&nbsp;↓ Hayır</div>
+          <div class="branch-row">
+            <span class="node-l">Leaf: A</span>
+            <span class="node-l">Leaf: B</span>
+          </div>
+        </div>
+        <div>
+          <div><span class="node-q">Internal Node</span></div>
+          <div style="color:#8b949e;font-size:12px;margin:6px 0">Başka ara soru</div>
+          <div>↓ Değer=1 ↓ Değer=2</div>
+          <div class="branch-row">
+            <span class="node-l">Leaf: A</span>
+            <span class="node-l">Leaf: A</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kavram</th><th>Açıklama</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Root Node (Kök)</strong></td><td>Ağacın en üst düğümü. En fazla bilgi kazandıran özelliğe göre seçilir.</td></tr>
+          <tr><td><strong>Internal Node (İç Düğüm)</strong></td><td>Ara dal noktaları. Hâlâ soru soran düğümler.</td></tr>
+          <tr><td><strong>Branch (Dal)</strong></td><td>Düğümler arası bağlantı. "Evet" veya "Hayır" yolu.</td></tr>
+          <tr><td><strong>Leaf Node (Yaprak)</strong></td><td>Son düğümler. Sınıf etiketi içerir. Artık soru sorulmaz.</td></tr>
+          <tr><td><strong>Pure Node (Saf Düğüm)</strong></td><td>Sadece tek bir sınıftan örnek içeren düğüm. Entropy=0.</td></tr>
+          <tr><td><strong>Impure Node (Karışık Düğüm)</strong></td><td>Birden fazla sınıf karışmış. Entropy&gt;0. Bölünmeye devam edilmeli.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr/>
+
+    <h2 id="hunts">⚙️ Hunt's Algoritması</h2>
+
+    <p>Decision Tree'lerin temel inşa algoritmasıdır. Özyinelemeli (recursive) çalışır:</p>
+
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Düğümdeki tüm örnek aynı sınıfsa → YAPRAK yap</strong><br>
+          <span style="color:var(--muted);font-size:13px">Pure node bulundu. Ağacın bu dalı tamamlandı. Artık bölme yok.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Farklı sınıflar varsa → En iyi özelliği bul ve böl</strong><br>
+          <span style="color:var(--muted);font-size:13px">Information Gain hesaplanır. En yüksek IG'li özellik seçilip veri bölünür.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Her alt düğüm için 1. ve 2. adımı tekrarla</strong><br>
+          <span style="color:var(--muted);font-size:13px">Özyinelemeli devam eder. Tüm yapraklar pure olana dek sürer.</span>
+        </div>
+      </li>
+    </ol>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Birebir</div>
+        "Düğüm oluşturulur; Eğer tüm örnek aynı sınıfa aitse, düğüm yaprak düğümdür ve sınıf etiketi bir değer atanır; aksi takdirde tüm özellikler için veri kümesi alt gruplara bölündürülür; özellik seçmek için bilgi kazancı (info gain) kullanılır."
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="entropy">🔬 Entropy (Entropi) Nedir?</h2>
+
+    <p>
+      Entropy, bir düğümdeki <strong>bozukluk (impurity / belirsizlik) ölçüsüdür</strong>. Düşük entropy → düğüm saf (tek sınıf). Yüksek entropy → düğüm karışık (birden fazla sınıf).
+    </p>
+
+    <div class="callout">
+      Analoji: Bir çantadan kırmızı bilye çekmek istiyorsun. Çantada sadece kırmızı blyeler varsa → Kesin kırmızı çekersin → belirsizlik=0 → Entropy=0. Çantada 50 kırmızı 50 mavi varsa → Eşit şans → Maximum belirsizlik → Entropy=1 (maksimum).
+    </div>
+
+    <h2 id="entropy-formul">📐 Entropy Formülü</h2>
+
+    <div class="formula-box">
+      Entropy(t) = − Σ [P(i|t) · log₂(P(i|t))]
+      <br><br>
+      Burada:<br>
+      t   = Düğüm (node)<br>
+      i   = Sınıf (class)<br>
+      P(i|t) = Düğüm t'de sınıf i'nin oranı (kaçta kaç)<br>
+      log₂ = 2 tabanında logaritma
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Kritik Kurallar — Ezber</div>
+        <ul>
+          <li>Tüm örnek <strong>aynı sınıftan</strong> → P=1 → log₂(1)=0 → <strong>Entropy = 0 (SAFI/PURE)</strong></li>
+          <li>İki sınıf <strong>eşit sayıda</strong> → P=0.5 → <strong>Entropy = 1 (MAKSIMUM)</strong></li>
+          <li>Entropy her zaman <strong>0 ile 1 arasında</strong> (ikili sınıflama için)</li>
+          <li>log₂(0) tanımsızdır → 0·log₂(0) = 0 kabul edilir</li>
+        </ul>
+        <div style="margin-top:10px">
+          <strong>Özel değerler:</strong><br>
+          log₂(1) = 0 &nbsp;&nbsp;|&nbsp;&nbsp; log₂(2) = 1 &nbsp;&nbsp;|&nbsp;&nbsp; log₂(4) = 2 &nbsp;&nbsp;|&nbsp;&nbsp; log₂(0.5) = -1 &nbsp;&nbsp;|&nbsp;&nbsp; log₂(0.25) = -2
+        </div>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="info-gain">📊 Information Gain (Bilgi Kazancı)</h2>
+
+    <p>
+      Bir özelliğe göre bölme yapıldığında ne kadar "kirlilik (entropy)" azalıyor? Information Gain bunu ölçer. <strong>En yüksek IG'li özellik seçilir!</strong>
+    </p>
+
+    <div class="formula-box">
+      Info_Gain(A) = Entropy(Parent) − Σ [(|Dᵥ| / |D|) · Entropy(Dᵥ)]
+      <br><br>
+      Parent  = Mevcut düğüm<br>
+      A       = Test edilecek özellik<br>
+      Dᵥ      = Özellik A'nın v değerine sahip örnekler<br>
+      |Dᵥ|/|D| = Alt setin ağırlığı (toplam içindeki oranı)
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body">
+        <div class="alert-title">Kolay Hatırlatma</div>
+        IG = Önce tüm düğümün Entropy'si − Sonra (her alt düğümün ağırlıklı Entropy'si)<br>
+        IG ne kadar büyükse, o özellik o kadar faydalıdır → Root Node olma adayı odur!
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="tenis">🎾 Tenis Veri Seti</h2>
+
+    <p>Klasik örnek! "Hava durumuna göre tenis oynanır mı?" sorusu. Notlarda bu örnek üzerinden hesaplama gösterilmiş.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Görünüm (Outlook)</th><th>Sıcaklık (Temp)</th><th>Nem (Humidity)</th><th>Rüzgar (Wind)</th><th>Tenis? (Label)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Sunny</td><td>Hot</td><td>High</td><td>Weak</td><td style="color:var(--red-light)">No</td></tr>
+          <tr><td>2</td><td>Sunny</td><td>Hot</td><td>High</td><td>Strong</td><td style="color:var(--red-light)">No</td></tr>
+          <tr><td>3</td><td>Overcast</td><td>Hot</td><td>High</td><td>Weak</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>4</td><td>Rain</td><td>Mild</td><td>High</td><td>Weak</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>5</td><td>Rain</td><td>Cool</td><td>Normal</td><td>Weak</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>6</td><td>Rain</td><td>Cool</td><td>Normal</td><td>Strong</td><td style="color:var(--red-light)">No</td></tr>
+          <tr><td>7</td><td>Overcast</td><td>Cool</td><td>Normal</td><td>Strong</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>8</td><td>Sunny</td><td>Mild</td><td>High</td><td>Weak</td><td style="color:var(--red-light)">No</td></tr>
+          <tr><td>9</td><td>Sunny</td><td>Cool</td><td>Normal</td><td>Weak</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>10</td><td>Rain</td><td>Mild</td><td>Normal</td><td>Weak</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>11</td><td>Sunny</td><td>Mild</td><td>Normal</td><td>Strong</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>12</td><td>Overcast</td><td>Mild</td><td>High</td><td>Strong</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>13</td><td>Overcast</td><td>Hot</td><td>Normal</td><td>Weak</td><td style="color:var(--green-light)">Yes</td></tr>
+          <tr><td>14</td><td>Rain</td><td>Mild</td><td>High</td><td>Strong</td><td style="color:var(--red-light)">No</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>14 örnek</strong>: 9 YES, 5 NO</p>
+
+    <h2 id="tenis-hesap">🔢 Adım Adım Tam Hesaplama</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Sınav: Bu Hesaplamayı Adım Adım Yap!</div>
+
+        <h3 style="color:var(--yellow-light);margin:12px 0 8px">📍 ADIM 1 — Başlangıç Entropy'si (Kök Düğüm)</h3>
+        <p>14 örnekte: 9 YES, 5 NO</p>
+        <div class="entropy-box">
+          P(Yes) = 9/14 = 0.643<br>
+          P(No)  = 5/14 = 0.357<br><br>
+          Entropy(Root) = −P(Yes)·log₂(P(Yes)) − P(No)·log₂(P(No))<br>
+                        = −(9/14)·log₂(9/14) − (5/14)·log₂(5/14)<br>
+                        = −0.643·(−0.637) − 0.357·(−1.485)<br>
+                        = 0.410 + 0.530<br>
+          <strong style="color:#fff">Entropy(Root) = 0.940</strong>
+        </div>
+
+        <h3 style="color:var(--yellow-light);margin:16px 0 8px">📍 ADIM 2 — Outlook ile IG Hesabı</h3>
+        <p>Outlook 3 değer alıyor: Sunny (5 örnek), Overcast (4 örnek), Rain (5 örnek)</p>
+
+        <p><strong>Sunny için Entropy (2 Yes, 3 No):</strong></p>
+        <div class="entropy-box">
+          E(Sunny) = −(2/5)·log₂(2/5) − (3/5)·log₂(3/5)<br>
+                   = −0.4·(−1.322) − 0.6·(−0.737)<br>
+                   = 0.529 + 0.442 = <strong style="color:#fff">0.971</strong>
+        </div>
+
+        <p><strong>Overcast için Entropy (4 Yes, 0 No):</strong></p>
+        <div class="entropy-box">
+          E(Overcast) = −(4/4)·log₂(4/4) − 0<br>
+                      = −1·log₂(1) = −1·0<br>
+          <strong style="color:var(--green-light)">E(Overcast) = 0.000 ← PURE NODE! (Tüm Yes)</strong>
+        </div>
+
+        <p><strong>Rain için Entropy (3 Yes, 2 No):</strong></p>
+        <div class="entropy-box">
+          E(Rain) = −(3/5)·log₂(3/5) − (2/5)·log₂(2/5)<br>
+                  = −0.6·(−0.737) − 0.4·(−1.322)<br>
+                  = 0.442 + 0.529 = <strong style="color:#fff">0.971</strong>
+        </div>
+
+        <p><strong>Outlook için Bilgi Kazancı:</strong></p>
+        <div class="entropy-box">
+          IG(Outlook) = E(Root) − [ (5/14)·E(Sunny) + (4/14)·E(Overcast) + (5/14)·E(Rain) ]
+                      = 0.940 − [ (5/14)·0.971 + (4/14)·0.000 + (5/14)·0.971 ]
+                      = 0.940 − [ 0.347 + 0.000 + 0.347 ]
+                      = 0.940 − 0.694
+          <strong style="color:var(--green-light)">IG(Outlook) = 0.246</strong>
+        </div>
+
+        <h3 style="color:var(--yellow-light);margin:16px 0 8px">📍 ADIM 3 — Tüm Özellikler için IG (Nottan Birebir Değerler!)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Özellik</th><th>IG</th><th>Seç?</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Outlook</strong></td><td><strong style="color:var(--green-light)">0.424</strong></td><td style="color:var(--green-light)">✅ EN YÜKSEK → KÖKE AL!</td></tr>
+              <tr><td>Wind</td><td>0.102</td><td>—</td></tr>
+              <tr><td>Humidity</td><td>0.016</td><td>—</td></tr>
+              <tr><td>Temperature</td><td>0.008</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="alert alert-info" style="margin-top:12px">
+          <div class="alert-icon">📈</div>
+          <div class="alert-body">
+            <div class="alert-title">Nottan Birebir — Tam Hesaplama (7. Hafta)</div>
+            <p>E(0) = 0.94 → Kök düğüm entropisini gösterir (9 Play, 5 Stay, 14 toplam)</p>
+            <p><strong>Gain(D, Wind)</strong> = 0.94 − (7/14)·E(Weak) + (7/14)·E(Strong)) = <strong>0.102</strong></p>
+            <p><strong>Gain(D, Temp)</strong> = 0.94 − (4/14)·E(H) + (5/14)·E(M) + (5/14)·E(C)) = <strong>0.008</strong></p>
+            <p><strong>Gain(D, Outlook)</strong> = 0.94 − (5/14)·E(Sunny) + (4/14)·E(Overcast) + (5/14)·E(Rain)) = <strong style="color:var(--green-light)">0.424</strong></p>
+            <p><strong>Gain(D, Humidity)</strong> = <strong>0.016</strong></p>
+            <p>→ Outlook özelliği, en yüksek information gain'e sahip olduğundan <strong>kök düğüme yazılır.</strong></p>
+          </div>
+        </div>
+
+        <h3 style="color:var(--yellow-light);margin:16px 0 8px">📍 ADIM 4 — Ağaç Devam Eder</h3>
+        <p>Root = Outlook. Overcast → Pure → Leaf: <strong style="color:var(--green-light)">YES</strong> (bitti!)<br>
+        Sunny → Devam (2 Yes, 3 No var → humidity veya wind ile böl)<br>
+        Rain → Devam (3 Yes, 2 No var → wind ile böl)</p>
+        <p>Sunny düğümünde Humidity seçilirse: High → No (pure), Normal → Yes (pure)</p>
+        <p>Rain düğümünde Wind seçilirse: Weak → Yes (pure), Strong → No (pure)</p>
+      </div>
+    </div>
+
+    <h3>Tamamlanmış Ağaç Görsel:</h3>
+    <div class="tree-vis">
+      <div><span class="node-r">Root: Outlook</span></div>
+      <div style="margin:8px 0;color:#8b949e">Sunny ↙ &nbsp;&nbsp;&nbsp;&nbsp; Overcast ↓ &nbsp;&nbsp;&nbsp;&nbsp; Rain ↘</div>
+      <div class="branch-row" style="align-items:flex-start">
+        <div style="text-align:center">
+          <span class="node-q">Humidity</span><br>
+          <span style="color:#8b949e;font-size:12px">High ↙ Normal ↘</span><br>
+          <div class="branch-row" style="justify-content:center">
+            <span class="node-l">❌ NO</span>
+            <span class="node-l">✅ YES</span>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <span class="node-l" style="font-size:14px;padding:10px 18px">✅ YES (Pure!)</span>
+        </div>
+        <div style="text-align:center">
+          <span class="node-q">Wind</span><br>
+          <span style="color:#8b949e;font-size:12px">Weak ↙ Strong ↘</span><br>
+          <div class="branch-row" style="justify-content:center">
+            <span class="node-l">✅ YES</span>
+            <span class="node-l">❌ NO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="gini">📐 Gini Index (Alternatif Saflık Ölçüsü)</h2>
+
+    <p>Entropy yerine kullanılan başka bir bozukluk ölçüsüdür. sklearn'ın varsayılan kriteri Gini'dir.</p>
+
+    <div class="formula-box">
+      Gini(t) = 1 − Σ [P(i|t)²]
+      <br><br>
+      İkili sınıf için: Gini = 1 − [P(Yes)² + P(No)²]<br><br>
+      Pure node: Gini = 0 &nbsp;&nbsp;&nbsp;&nbsp; Maksimum (50/50): Gini = 0.5
+    </div>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>Entropy vs Gini</h4>
+        <ul style="font-size:13px">
+          <li>İkisi de aynı sonuçları verir genellikle</li>
+          <li>Entropy: log₂ hesabı gerekir (yavaş)</li>
+          <li>Gini: sadece kare işlemi (daha hızlı)</li>
+          <li>sklearn default: Gini</li>
+          <li>Notlarda Entropy daha fazla gösterilmiş</li>
+        </ul>
+      </div>
+      <div class="mini-card">
+        <h4>Gini Örnek Hesap</h4>
+        <p style="font-size:13px">14 örnekte 9 Yes, 5 No:</p>
+        <div class="formula-box" style="font-size:12px;margin:6px 0">
+          Gini = 1 − [(9/14)² + (5/14)²]<br>
+               = 1 − [0.413 + 0.127]<br>
+               = 1 − 0.540 = 0.460
+        </div>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="overfitting">✂️ Overfitting ve Pruning</h2>
+
+    <p>Decision Tree çok derine inerse <strong>overfitting</strong> yapar: Eğitim verisini ezberler, yeni veriye genelleme yapamaz.</p>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4 style="color:var(--red-light)">Overfitting Belirtileri</h4>
+        <ul style="font-size:13px">
+          <li>Eğitim accuracy çok yüksek</li>
+          <li>Test accuracy çok düşük</li>
+          <li>Ağaç çok derin ve karmaşık</li>
+        </ul>
+      </div>
+      <div class="mini-card">
+        <h4 style="color:var(--green-light)">Pruning Çözümü</h4>
+        <ul style="font-size:13px">
+          <li>max_depth: Ağaç derinliği sınırlandırılır</li>
+          <li>min_samples_split: Bölüm için min örnek</li>
+          <li>min_samples_leaf: Yaprak için min örnek</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 id="missing">📭 Missing Data (Decision Tree)</h2>
+    <p>Notlarda Decision Tree'nin missing data için de kullanılabileceği belirtilmiş:</p>
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan</div>
+        "4) Decision Tree ve farklı istatistiksel yöntemler kullanılabilir" → Missing data'yı tahmin etme yöntemi olarak.
+      </div>
+    </div>
+
+    <h2 id="kod">💻 Kod Örnekleri</h2>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.tree <span class="hl-kw">import</span> <span class="hl-cls">DecisionTreeClassifier</span>, export_graphviz
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing, metrics
+<span class="hl-kw">import</span> pandas <span class="hl-kw">as</span> pd, numpy <span class="hl-kw">as</span> np
+
+<span class="hl-cm"># ── Veri Hazırlık ──</span>
+df = pd.read_csv(<span class="hl-str">'drug200.csv'</span>)
+X = df.drop(<span class="hl-str">'Drug'</span>, axis=<span class="hl-num">1</span>)
+y = df[<span class="hl-str">'Drug'</span>]
+
+<span class="hl-cm"># ── LabelEncoder (Sınavda çıkabilir!) ──</span>
+le = preprocessing.<span class="hl-cls">LabelEncoder</span>()
+X[<span class="hl-str">'Sex'</span>]        = le.fit_transform(X[<span class="hl-str">'Sex'</span>])        <span class="hl-cm"># M/F → 0/1</span>
+X[<span class="hl-str">'BP'</span>]         = le.fit_transform(X[<span class="hl-str">'BP'</span>])         <span class="hl-cm"># LOW/NORMAL/HIGH → 0/1/2</span>
+X[<span class="hl-str">'Cholesterol'</span>] = le.fit_transform(X[<span class="hl-str">'Cholesterol'</span>]) <span class="hl-cm"># NORMAL/HIGH → 0/1</span>
+
+<span class="hl-cm"># ── Train/Test ──</span>
+<span class="hl-kw">from</span> sklearn.model_selection <span class="hl-kw">import</span> train_test_split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="hl-num">0.3</span>, random_state=<span class="hl-num">3</span>
+)
+
+<span class="hl-cm"># ── Önemli! Decision tree scikit-learn ──</span>
+drugTree = <span class="hl-cls">DecisionTreeClassifier</span>(
+    criterion=<span class="hl-str">'entropy'</span>,  <span class="hl-cm"># Entropy kullan (Gini de olabilir)</span>
+    max_depth=<span class="hl-num">4</span>            <span class="hl-cm"># Overfitting önlemi</span>
+)
+drugTree.fit(X_train, y_train)
+
+predTree = drugTree.predict(X_test)
+print(<span class="hl-str">"Accuracy:"</span>, metrics.accuracy_score(y_test, predTree))
+
+<span class="hl-cm"># ── Görselleştirme ──</span>
+<span class="hl-kw">import</span> pydotplus
+dot_data = export_graphviz(
+    drugTree,
+    feature_names=[<span class="hl-str">'Age'</span>, <span class="hl-str">'Sex'</span>, <span class="hl-str">'BP'</span>, <span class="hl-str">'Cholesterol'</span>, <span class="hl-str">'Na_to_K'</span>],
+    class_names=drugTree.classes_,
+    filled=<span class="hl-num">True</span>, special_characters=<span class="hl-num">True</span>
+)
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+graph.write_png(<span class="hl-str">'dtree.png'</span>)   <span class="hl-cm"># Ağaç görüntüsü kaydedilir</span>
+</code></pre>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bölüm 6 SINAV ÖZETİ — En Kritik Bölüm!</div>
+        <ul>
+          <li>Entropy(t) = −Σ P(i|t)·log₂P(i|t) → Pure=0, Maksimum=1</li>
+          <li>IG = E(parent) − Σ[(|Dᵥ|/|D|)·E(Dᵥ)]</li>
+          <li>En yüksek IG → Root Node!</li>
+          <li>Overcast → Pure (0 entropi) → Direkt YES yaprak olur</li>
+          <li>Hunt's Algoritması: Pure ise yaprak yap, değilse en iyi feature ile böl</li>
+          <li>sklearn: criterion='entropy', max_depth=4</li>
+          <li>LabelEncoder ile kategorik veri sayıya çevrilir (M/F → 0/1)</li>
+          <li>Gini = 1 − Σ P²(i|t)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b5_metrikler.html">← Bölüm 5</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="b7_wavelet.html">Bölüm 7: Wavelet →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

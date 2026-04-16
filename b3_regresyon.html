@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 3 · Regresyon Modelleri — Örüntü Tanıma</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html" class="active">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">📈 Bölüm 3 · 2–3. Hafta · 25/02/2025 &amp; 04/03/2026</div>
+  <h1>Regresyon Modelleri</h1>
+  <p class="subtitle">Simple Linear Regression'dan Non-Linear Sigmoid'e kadar tüm regresyon türleri. θ₀ ve θ₁ nasıl hesaplanır? MSE ve R² Score nedir? Polynomial'da PolynomialFeatures nasıl kullanılır?</p>
+  <div class="meta">
+    <div class="meta-item">📄 Kaynak: <span>21.51.21(1-5) · 21.51.21 · 21.51.22</span></div>
+    <div class="meta-item">⏱ Okuma: <span>~30 dk</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🔴 Çok Önemli – Sigmoid formülü kesin çıkar</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Bu Bölümde</div>
+    <a href="#nedir">Regresyon Nedir?</a>
+    <a href="#turler">Regresyon Türleri</a>
+    <a href="#grafik">Grafik → Model Eşleştirmesi</a>
+    <a href="#slr">Simple Linear (SLR)</a>
+    <a href="#scatter">Scatter Plot &amp; MSE</a>
+    <a href="#slr-theta">θ₀ ve θ₁ Hesaplama</a>
+    <a href="#mlr">Multiple Linear (MLR)</a>
+    <a href="#polynomial">Polynomial Regresyon</a>
+    <a href="#linear-poly">Linear vs Polynomial Farkı</a>
+    <a href="#nonlinear">Non-Linear Regresyon</a>
+    <a href="#sigmoid">Sigmoid (GDP Örneği)</a>
+    <a href="#kod">Kod Örnekleri</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="nedir">📊 Regresyon Nedir?</h2>
+    <p>
+      Regresyon, <strong>sürekli (continuous) bir çıktıyı tahmin etmek</strong> için kullanılan Supervised Learning yöntemidir.
+      Tahmin edilmek istenen değer sayısal ve süreklidir (net bir değer, örneğin: 234 g/km CO₂).
+    </p>
+
+    <div class="callout">
+      Analoji: Arabanın motor hacmini biliyorsun (3.5 litre). Bunun CO₂ salınımının kaç g/km olacağını tahmin etmek istiyorsun.
+      Elinde binlerce arabanın motor hacmi ve CO₂ verisi var. <em>Regresyon işte bunu öğrenir.</em>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Temel Kural</div>
+        Bağımlı değişken (y) <strong>sürekli</strong> ise → Regresyon | <strong>ayrık</strong> ise → Classification.<br/>
+        Regresyonda bağımlı değişken kesinlikle <strong>sürekli (continuous)</strong> olmalıdır.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="turler">🔢 Regresyon Türleri</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tür</th><th>Formül</th><th>Ne Zaman Kullanılır?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Simple Linear Regression (SLR)</strong></td><td>ŷ = θ₀ + θ₁x</td><td>Sadece 1 bağımsız değişken</td></tr>
+          <tr><td><strong>Multiple Linear Regression (MLR)</strong></td><td>ŷ = θ₀ + θ₁x₁ + θ₂x₂ + ... = θᵀX</td><td>Birden fazla bağımsız değişken</td></tr>
+          <tr><td><strong>Polynomial Regression</strong></td><td>ŷ = θ₀ + θ₁x + θ₂x²</td><td>1 değişken, hafif eğrisel veri</td></tr>
+          <tr><td><strong>Non-linear Regression</strong></td><td>y = a + b·cˣ veya Sigmoid</td><td>Polynomial'a sığmayan eğrisel veri</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-box">
+      linear ⊂ polynomial ⊂ non-linear<br/>
+      → Her linear, polynomial'dır. Her polynomial, non-linear'dır. Tersi geçerli değil.
+    </div>
+
+    <hr/>
+
+    <h2 id="grafik">📈 Grafik → Model Eşleştirmesi (SINAV!)</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Sınavda Bu Şekilde Sorulur</div>
+        "Aşağıdaki grafiği veren hangi model kullanılır ve denklemi nedir?" → Grafik şekline bak, model adını ve formülünü yaz.
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Grafik Şekli</th><th>Model Adı</th><th>Formül Örneği</th></tr></thead>
+        <tbody>
+          <tr><td>Düz çizgi ↗ (basit)</td><td>Simple Linear Regression</td><td>y = ax + b</td></tr>
+          <tr><td>Yükselen eğri ↗ (hafif kıvrım)</td><td>Polynomial Regression (d=2)</td><td>y = ax² + bx + c</td></tr>
+          <tr><td>U şekli ∪ veya ters U ∩</td><td>Quadratic (Polynomial, Derece 2)</td><td>y = x²</td></tr>
+          <tr><td><strong>S şekli ⌇ (logistik eğri)</strong></td><td><strong>Sigmoidal / Non-linear</strong></td><td>y = 1/(1+e^(−β₁(x−β₂)))</td></tr>
+          <tr><td>Üstel büyüme ↑↑</td><td>Exponential</td><td>y = a + b·cˣ</td></tr>
+          <tr><td>Yavaşlayan artış (log)</td><td>Logarithmic / Non-linear</td><td>y = log(x)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr/>
+
+    <h2 id="slr">📏 Simple Linear Regression (SLR)</h2>
+    <p>
+      Sadece <strong>1 bağımsız değişken</strong> kullanılır. Scatter plot'ta noktalara en yakın
+      <strong>düz çizgi</strong> çizilir (en az MSE'li çizgi seçilir).
+    </p>
+
+    <div class="formula-box">ŷ = θ₀ + θ₁·x₁</div>
+
+    <div class="def-list">
+      <div class="def-row">
+        <div class="def-term">θ₀ (theta-0)</div>
+        <div class="def-desc">Başlangıç noktası (intercept) — çizginin y eksenini kestiği nokta</div>
+      </div>
+      <div class="def-row">
+        <div class="def-term">θ₁ (theta-1)</div>
+        <div class="def-desc">Feature'ın katsayısı (coefficient) — çizginin eğimi</div>
+      </div>
+      <div class="def-row">
+        <div class="def-term">x₁</div>
+        <div class="def-desc">Seçilen bağımsız değişken (feature), örneğin enginesize</div>
+      </div>
+      <div class="def-row">
+        <div class="def-term">ŷ (y-hat)</div>
+        <div class="def-desc">Tahmin edilen bağımlı değişken — gerçek değer değil, tahmin!</div>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Feature Seçimi — Scatter Plot ile</div>
+        10 bağımsız değişkenden 1 tanesi seçilecekse, bağımlı değişken (CO₂) ile en yüksek korelasyona sahip olan seçilir.
+        plt.scatter(feature, CO2E) ile görselleştir → düz çizgiye en yakın olanı seç.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="scatter">📉 Scatter Plot &amp; MSE (Model Değerlendirme)</h2>
+    <p>Model elde edildikten sonra <strong>başarım ve hata oranı ölçülmeli</strong>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metrik</th><th>Ne Ölçer?</th><th>İyi Olan</th></tr></thead>
+        <tbody>
+          <tr><td><strong>MSE</strong></td><td>Ortalama hata karesi</td><td>→ Küçük olması daha iyi</td></tr>
+          <tr><td><strong>MAE</strong></td><td>Ortalama mutlak hata</td><td>→ Küçük olması daha iyi</td></tr>
+          <tr><td><strong>R²</strong></td><td>Accuracy (başarım) — 0 ile 1 arası</td><td>→ Büyük olması daha iyi</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-box">MSE = (1/n) × Σ(yᵢ − ŷᵢ)²</div>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">Train vs Test Accuracy Farkı</div>
+        Eğer train ve test accuracy arasında <strong>6 puandan fazla fark</strong> varsa → <strong>Overfitting!</strong><br/>
+        Test verileri gerçek verilerden oluşmalıdır (sentetik/augmentli olmamalı — ama train'de kullanılabilir).
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Karşılaştırma Örneği</div>
+        SLR: MAE = 22.71, R²-score = 0.77<br/>
+        Polynomial: MAE = 25.28, R²-score = 0.75<br/>
+        → SLR daha iyi! (MAE küçük, R² büyük)
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="slr-theta">🔢 θ₁ ve θ₀ Formülleri — Manuel Hesaplama</h2>
+
+    <div class="formula-box">
+      θ₁ = Σ(xᵢ − x̄)·(yᵢ − ȳ) / Σ(xᵢ − x̄)²<br/><br/>
+      θ₀ = ȳ − θ₁ · x̄
+    </div>
+
+    <ul>
+      <li>x̄ → Seçilen bağımsız değişkene ait sütunun ortalaması</li>
+      <li>ȳ → Bağımlı değişkene ait sütunun ortalaması</li>
+      <li>xᵢ, yᵢ → Her satırdaki değerler (Her satır ayrı ayrı hesaplanır)</li>
+    </ul>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Kod ile CO₂ Veri Seti Sonucu</div>
+        θ₁ = 39.093 (coefficient), θ₀ = 125.38 (intercept)<br/>
+        <strong>Model:</strong> ŷ = 125.38 + 39.093 × (enginesize)<br/><br/>
+        Yeni değer: enginesize = 3.5 → ŷ = 125.38 + 39.093×3.5 = 262.2 g/km CO₂
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="mlr">📐 Multiple Linear Regression (MLR)</h2>
+    <p>Birden fazla bağımsız değişken kullanılır. Çok bağımsız değişken olduğundan <strong>matris</strong> şeklinde yazılır.</p>
+
+    <div class="formula-box">
+      ŷ = θ₀ + θ₁x₁ + θ₂x₂ + θ₃x₃ + ... + θₙxₙ<br/><br/>
+      Matris gösterimi: ŷ = θᵀX<br/>
+      θᵀ = [θ₀, θ₁, θ₂, θ₃...] , X = [x₀, x₁, x₂, x₃]ᵀ
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">CO₂ Veri Seti Örneği (3 bağımsız değişken)</div>
+        ŷ = 62.91 + 9.17·(enginesize) + 8.40·(cylinders) + 9.84·(fuel_consumption)<br/>
+        variance score = 0.86 → 3 feature ile daha iyi başarım elde edildi.<br/><br/>
+        <strong>4 feature seçildi</strong> (3 bağımsız, 1 bağımlı) → 3 katsayı (coefficient) bulunur.<br/>
+        Bu değerler → array'e dönüştürülür → Coefficients (katsayılar) bulunur.
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">MLR Kritik Notlar</div>
+        Regresyonda bağımlı değişken kesinlikle <strong>sürekli (continuous)</strong> olmalı!
+        θᵀ alınamayacağından θ'nın transpozu alınır (çünkü ŷ = θᵀ bu şekilde sütun vektörüyle çarp).
+        <strong>SLR ne zaman tercih edilir?</strong> Sadece 1 bağımsız değişken olduğunda, ya da 1 feature bağımlıyla güçlü korelasyona sahipse.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="polynomial">🌀 Polynomial Regresyon</h2>
+    <p>Non-linear'ın alt kümesidir. <strong>Sadece 1 değişken</strong> ve bu değişken <strong>pozitif derecelerde</strong> kullanılır.</p>
+
+    <div class="formula-box">
+      Derece 2: ŷ = θ₀ + θ₁x + θ₂x²<br/>
+      Derece 3: ŷ = θ₀ + θ₁x + θ₂x² + θ₃x³
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">CO₂ Veri Seti Örneği (degree=2)</div>
+        CO₂Em = 101.73 + 0.54·(ES) − 2.01·(ES)²<br/>
+        Karşılaştırma: SLR R²=0.77 &gt; Polynomial R²=0.75 → SLR bu durumda daha iyi.
+      </div>
+    </div>
+
+    <h3>Polynomial Regresyon Adımları</h3>
+    <ol class="steps">
+      <li>Derece (D=2, D=3...) belirle — veriyi görselleştirerek karar ver</li>
+      <li><code>PolynomialFeatures</code> ile veriyi matrise dönüştür</li>
+      <li><code>LinearRegression</code> ile modeli eğit</li>
+      <li>Coefficients ve Intercept'i al →  ŷ formülünü yaz</li>
+    </ol>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.preprocessing <span class="hl-kw">import</span> PolynomialFeatures
+<span class="hl-kw">from</span> sklearn.linear_model <span class="hl-kw">import</span> LinearRegression
+
+poly = <span class="hl-cls">PolynomialFeatures</span>(degree=<span class="hl-num">2</span>)
+train_x_poly = poly.fit_transform(train_x)  <span class="hl-cm"># train_x → matrise çevrildi</span>
+
+clf = <span class="hl-cls">LinearRegression</span>()
+clf.fit(train_x_poly, train_y)
+
+print(<span class="hl-str">"Coefficients:"</span>, clf.coef_)   <span class="hl-cm"># θ₁, θ₂ değerleri</span>
+print(<span class="hl-str">"Intercept:"</span>, clf.intercept_)   <span class="hl-cm"># θ₀ değeri</span></code></pre>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">Önemli Not</div>
+        <code>train_x</code> yerine <code>train_x_poly</code> kullanılır — çünkü veriler artık matris halinde.
+        Matris dönüşümü örneği: [2, 3, 1] → derece 2 → [[1,2,4], [1,3,9], [1,1,1]]
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="linear-poly">🔄 Polynomial mu, Non-linear mi? — Nasıl Ayırt Edilir?</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Özellik</th><th>Polynomial</th><th>Non-linear (Daha Geniş)</th></tr></thead>
+        <tbody>
+          <tr><td>Değişken sayısı</td><td>Her zaman 1 değişken</td><td>Polynomial'ı kapsar, 1+ değişken</td></tr>
+          <tr><td>Derece türü</td><td>Pozitif tam sayı (x¹, x², x³...)</td><td>eˣ, ln(x), x⁻², sin(x) gibi her türlü</td></tr>
+          <tr><td>Örnek denklem</td><td>y = x² + 3x + 1</td><td>y = eˣ, y = log(x), y = 1/(1+eˣ)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-box">
+      2 değişken var → MLR (polynomial değil, non-linear değil)<br/>
+      1 değişken, pozitif derecelerde → Polynomial<br/>
+      1 değişken, eˣ veya log gibi → Non-linear
+    </div>
+
+    <hr/>
+
+    <h2 id="nonlinear">🌊 Non-Linear Regresyon</h2>
+    <p>Polynomial bile yetmezse kullanılır. Polynomial'ı kapsar ama daha geniştir.</p>
+
+    <pre><code>x = np.arange(-<span class="hl-num">5</span>, <span class="hl-num">5</span>, <span class="hl-num">0.1</span>)  <span class="hl-cm"># -5'ten 5'e kadar, 0.1 aralıklı</span>
+y = <span class="hl-num">2</span>*x + <span class="hl-num">3</span>
+y_noise = <span class="hl-num">2</span> * np.random.normal(size=x.size)  <span class="hl-cm"># Noise ekleniyor (gerçek veri simülasyonu)</span>
+ydata = y + y_noise
+plt.plot(x, ydata)</code></pre>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Model Seçimi Nasıl Yapılır?</div>
+        2 model: MSE ve R² karşılaştırılır. <strong>MSE küçük + R² büyük</strong> olan seçilir.
+        Veri düzleyse → SLR/MLR | S şeklindeyse → Sigmoid | U şeklindeyse → Quadratic
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="sigmoid">⚯ Sigmoidal Non-linear Regresyon (GDP Örneği)</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">SINAV — Sigmoid formülü bilinmeli! Büyük ihtimalle çıkar.</div>
+        Veri S-şeklinde bir eğri izliyorsa → Sigmoidal. GDP (Gayri Safi Hasıla) grafiği sonsuz artamayacağından Sigmoid kullanılır.
+      </div>
+    </div>
+
+    <div class="formula-box">y = 1 / (1 + e^(−β₁(x−β₂)))</div>
+
+    <ul>
+      <li><strong>β₁</strong> → Eğrinin eğimini (ne kadar hızlı geçiş) belirler</li>
+      <li><strong>β₂</strong> → Eğrinin merkezini belirler (geçiş noktası — inflection point)</li>
+    </ul>
+
+    <h3>Sigmoid Python Kodu</h3>
+    <pre><code><span class="hl-kw">from</span> scipy.optimize <span class="hl-kw">import</span> curve_fit
+
+<span class="hl-kw">def</span> sigmoid(x, Beta_1, Beta_2):
+    y = <span class="hl-num">1</span> / (<span class="hl-num">1</span> + np.exp(-Beta_1 * (x - Beta_2)))
+    <span class="hl-kw">return</span> y
+
+<span class="hl-cm"># Başlangıç değerleri (ilk tahmini girdiler)</span>
+beta_1 = <span class="hl-num">0.3</span>
+beta_2 = <span class="hl-num">1990</span>
+
+<span class="hl-cm"># curve_fit ile en iyi β₁ ve β₂ değerleri bulunur</span>
+<span class="hl-cm"># *popt → iterable olarak açılır (best_beta1, best_beta2)</span>
+popt, pcov = curve_fit(sigmoid, xdata, ydata)
+
+<span class="hl-cm"># Tahmin — popt en iyi parametreler</span>
+y_pred = sigmoid(xdata, *popt)
+
+<span class="hl-cm"># Modelin accuracy'si de hesaplanabilir</span>
+print(<span class="hl-str">"R²:"</span>, r2_score(ydata, y_pred))</code></pre>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan — Sigmoid Detayları</div>
+        <p>Model ile gerçek değerler uyuşmadığında → scipy'den <code>curve_fit</code> kullanılarak en optimum β₁ ve β₂ bulunur.</p>
+        <p>Ayrıca veri normalize edilir (0-1 arasına): 1, 2, 3, 30, 40 → 1/40, 2/40, 3/40, 30/40, 40/40</p>
+        <p><strong>popt neden *popt şeklinde?</strong> popt = [best_beta1, best_beta2] listesi → *popt ile ayrı parametrelere açılır.</p>
+        <p>Bu data ile daha yakın tahmin yapan model elde edilir. Modelin accuracy'si hesaplanabilir.</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="kod">💻 Kod Özeti</h2>
+    <pre><code><span class="hl-kw">import</span> pandas <span class="hl-kw">as</span> pd
+<span class="hl-kw">import</span> numpy <span class="hl-kw">as</span> np
+<span class="hl-kw">from</span> sklearn.linear_model <span class="hl-kw">import</span> LinearRegression
+
+<span class="hl-cm"># Veri oku ve feature seç</span>
+df = pd.read_csv(<span class="hl-str">"FuelConsumption.csv"</span>)
+cdf = df[[<span class="hl-str">'ENGINESIZE'</span>, <span class="hl-str">'CYLINDERS'</span>, <span class="hl-str">'FUELCONSUMPTION_COMB'</span>, <span class="hl-str">'CO2EMISSIONS'</span>]]
+
+<span class="hl-cm"># Train/test ayır (%80 train, %20 test)</span>
+msk = np.random.rand(len(df)) &lt; <span class="hl-num">0.8</span>
+train = cdf[msk]
+test = cdf[~msk]
+
+<span class="hl-cm"># SLR — 1 satırda eğitim!</span>
+clf = <span class="hl-cls">LinearRegression</span>()
+clf.fit(train[[<span class="hl-str">'ENGINESIZE'</span>]], train[<span class="hl-str">'CO2EMISSIONS'</span>])
+
+print(<span class="hl-str">"θ₁ (Coefficient):"</span>, clf.coef_)
+print(<span class="hl-str">"θ₀ (Intercept):"</span>, clf.intercept_)
+
+<span class="hl-cm"># Tahmin</span>
+yhat = clf.predict(test[[<span class="hl-str">'ENGINESIZE'</span>]])
+
+<span class="hl-cm"># Değerlendirme</span>
+print(<span class="hl-str">"MAE:"</span>, np.mean(np.absolute(yhat - test[<span class="hl-str">'CO2EMISSIONS'</span>])))
+print(<span class="hl-str">"R²:"</span>, clf.score(test[[<span class="hl-str">'ENGINESIZE'</span>]], test[<span class="hl-str">'CO2EMISSIONS'</span>]))</code></pre>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bölüm 3 Sınav Özeti</div>
+        <ul>
+          <li><strong>SLR:</strong> ŷ = θ₀ + θ₁·x | θ₁ = Σ(xᵢ−x̄)(yᵢ−ȳ) / Σ(xᵢ−x̄)²</li>
+          <li><strong>R² büyük, MSE küçük</strong> → Bu model daha iyi</li>
+          <li><strong>Sigmoid:</strong> y = 1/(1+e^(−β₁(x−β₂))) → GDP örneği → S-şekli → sigmoidal</li>
+          <li>Polynomial: 1 değişken, pozitif dereceleri → PolynomialFeatures(degree=2)</li>
+          <li>linear ⊂ polynomial ⊂ non-linear</li>
+          <li>Train/test farkı &gt;6 puan → Overfitting</li>
+          <li>variance score = 0.86 (MLR) → 3 feature → daha iyi başarım</li>
+          <li>Grafik şekline göre model seç tablosunu ezberle</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b2_veri.html">← Bölüm 2</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="b4_knn.html">Bölüm 4: KNN →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

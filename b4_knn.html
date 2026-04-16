@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 4 · Sınıflandırma & KNN</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html" class="active">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">🔮 Bölüm 4 · 4. Hafta · 11/03/2026</div>
+  <h1>Sınıflandırma & KNN</h1>
+  <p class="subtitle">Classification nedir, hangi algoritmalar var? K-Nearest Neighbors algoritması nasıl çalışır? k seçimi, mesafe metrikleri ve KNN ile regresyon vs classification farkları.</p>
+  <div class="meta">
+    <div class="meta-item">📄 Kaynak: <span>21.51.21(5-8) · 21.51.22 · 21.51.31</span></div>
+    <div class="meta-item">⏱ Okuma: <span>~25 dk</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🟡 Orta – KNN hesaplama sorusu gelebilir</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Bu Bölümde</div>
+    <a href="#classification">Classification Nedir?</a>
+    <a href="#algoritmalar">Algoritmalar</a>
+    <a href="#churn">Churn Örneği</a>
+    <a href="#knn-nedir">KNN Algoritması</a>
+    <a href="#k-secimi">K Değeri Seçimi</a>
+    <a href="#mesafe">Mesafe Metrikleri</a>
+    <a href="#ornek">Hesaplama Örneği</a>
+    <a href="#knn-reg">KNN ile Regresyon</a>
+    <a href="#normalizasyon-knn">Normalizasyon Önemi</a>
+    <a href="#logloss-knn">LogLoss (KNN)</a>
+    <a href="#kod">Kod Örnekleri</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="classification">🔖 Classification (Sınıflandırma) Nedir?</h2>
+    <p>
+      Classification, <strong>ayrık (discrete/kategorik) bir çıktıyı tahmin etmek</strong> için kullanılan Supervised Learning yöntemidir. Sonuç belirli sınıflardan birine aittir.
+    </p>
+
+    <div class="callout">
+      Analoji: Bir doktor hastayı muayene eder ve "Kanser var mı yok mu?" diye karar verir. Bu bir classification problemi. Regresyondan farkı: "kanser ne kadar büyük?" diye sorsaydı o zaman regression olurdu.
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">👥</div>
+        <h4>İkili Sınıflandırma (Binary)</h4>
+        <p>Sadece 2 sınıf var: Evet/Hayır, 0/1, Olumlu/Olumsuz</p>
+        <ul style="font-size:12px;margin-top:8px">
+          <li>Müşteri gidecek mi? (Churn: Evet/Hayır)</li>
+          <li>E-posta spam mi?</li>
+          <li>Kanser var mı?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h4>Çok Sınıflı (Multi-class)</h4>
+        <p>3 veya daha fazla sınıf: 0–9, renk kategorileri</p>
+        <ul style="font-size:12px;margin-top:8px">
+          <li>El yazısı rakam tanıma (0,1,2...9)</li>
+          <li>Biyometrik tanıma</li>
+          <li>Hava durumu (güneşli/yağmurlu/karlı)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 id="algoritmalar">⚙️ Sınıflandırma Algoritmaları</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Algoritma</th><th>Kısa Açıklama</th><th>Ne Zaman?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>KNN</strong> (K-Nearest Neighbors)</td><td>En yakın k komşuya bakarak sınıflandırır. Basit ve etkilidir.</td><td>Küçük-orta veri setleri</td></tr>
+          <tr><td><strong>Decision Tree</strong></td><td>Soru sorarak veriyi böler. Görsel olarak yorumlanabilir.</td><td>Yorumlanabilirlik önemliyse</td></tr>
+          <tr><td><strong>Logistic Regression</strong></td><td>İkili sınıflandırma için lineer sınır çizer. Hızlı.</td><td>İkili sınıf, geniş veri</td></tr>
+          <tr><td><strong>SVM</strong> (Support Vector Machine)</td><td>Sınıflar arası en geniş kenar boşluğunu bulur.</td><td>Yüksek boyutlu veri</td></tr>
+          <tr><td><strong>Naive Bayes</strong></td><td>Olasılık tabanlı. Bağımsızlık varsayar. Hızlı.</td><td>Metin sınıflandırma</td></tr>
+          <tr><td><strong>Neural Networks</strong></td><td>Karmaşık örüntüler için. Çok katmanlı öğrenme.</td><td>Büyük veri, derin öğrenme</td></tr>
+          <tr><td><strong>LDA</strong> (Linear Discriminant Analysis)</td><td>Sınıfları ayıran doğrusal sınır.</td><td>İstatistiksel analiz</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="churn">📱 Churn Örneği (Nottan)</h2>
+    <p>
+      Churn, müşterilerin bir hizmet sağlayıcıdan ayrılması anlamına gelir. Telekom şirketleri, hangi müşterinin gideceğini önceden tahmin etmek ister.
+    </p>
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Telecom Veri Seti Örneği (Nottan)</div>
+        12 feature'lı telecom veri seti kullanılmış. value_count() ile bağımlı değişken dağılımı görülüyor.
+        Normalizasyon sonrası KNN uygulanıyor.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="knn-nedir">🔮 KNN (K-Nearest Neighbors) Algoritması</h2>
+
+    <p>KNN, "Söyle bana arkadaşların kimler, sana kim olduğunu söyleyeyim" mantığıyla çalışır. Yeni bir veri noktası geldiğinde ona <strong>en yakın k komşusuna</strong> bakılır. O komşuların çoğunluğu hangi sınıfsa, yeni nokta da o sınıfa atanır.</p>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">KNN'in Önemli Özelliği</div>
+        "KNN'de model eğitimi YOKTUR! Tüm veri noktaları sistemde saklanır (instance-based learning). Yeni nokta gelince mevcut verilerle hesaplama yapılır." — Bu yüzden SVM ve Decision Tree gibi modellere kıyasla "lazy learner" denir.
+      </div>
+    </div>
+
+    <h3>KNN Adımları:</h3>
+    <ol class="steps">
+      <li>Yeni veri noktası gelir</li>
+      <li>Mevcut tüm eğitim noktalarına uzaklık hesaplanır</li>
+      <li>En yakın k nokta seçilir</li>
+      <li><strong>Classification için:</strong> En çok tekrar eden sınıf seçilir (çoğunluk oyu)</li>
+      <li><strong>Regression için:</strong> k komşunun ortalaması alınır</li>
+    </ol>
+
+    <h2 id="k-secimi">🔢 K Değeri Nasıl Seçilir?</h2>
+
+    <p>K değeri çok önemlidir. Ne çok küçük ne de çok büyük olmalı:</p>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4 style="color:var(--red-light)">K = 1 → Kötü!</h4>
+        <p style="font-size:13px">Sadece 1 komşuya bakılır. Overfitting riski yüksektir. Noise veriye çok duyarlıdır.</p>
+      </div>
+      <div class="mini-card">
+        <h4 style="color:var(--red-light)">K çok büyük → Kötü!</h4>
+        <p style="font-size:13px">Çok fazla komşuya bakılır. Underfitting riski. Model çok genelleşir, yerel örüntüleri kaçırır.</p>
+      </div>
+    </div>
+
+    <p>Doğru k: <strong>k=1'den 10'a kadar denenir (veya sqrt(n))</strong>. Her k için hata oranı (error rate) hesaplanır. En düşük hataya sahip k seçilir.</p>
+
+    <pre><code><span class="hl-kw">from</span> sklearn.neighbors <span class="hl-kw">import</span> <span class="hl-cls">KNeighborsClassifier</span>
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> metrics
+
+Ks = <span class="hl-num">10</span>
+mean_acc = np.zeros((Ks-<span class="hl-num">1</span>,))
+
+<span class="hl-kw">for</span> n <span class="hl-kw">in</span> range(<span class="hl-num">1</span>, Ks):
+    neigh = <span class="hl-cls">KNeighborsClassifier</span>(n_neighbors=n).fit(X_train, y_train)
+    yhat  = neigh.predict(X_test)
+    mean_acc[n-<span class="hl-num">1</span>] = metrics.accuracy_score(y_test, yhat)
+
+print(<span class="hl-str">"Best accuracy:"</span>, mean_acc.max(), <span class="hl-str">"– K="</span>, mean_acc.argmax()+<span class="hl-num">1</span>)
+</code></pre>
+
+    <h2 id="mesafe">📏 Mesafe Metrikleri</h2>
+
+    <p>KNN'de "en yakın" kavramı bir mesafe metriği gerektirir:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metrik</th><th>Formül</th><th>Ne Zaman?</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Euclidean (Öklid)</strong> ⭐ En yaygın</td>
+            <td>d = √[Σ(xᵢ − yᵢ)²]</td>
+            <td>Sürekli veriler, default seçim</td>
+          </tr>
+          <tr>
+            <td><strong>Manhattan (Taksi)</strong></td>
+            <td>d = Σ|xᵢ − yᵢ|</td>
+            <td>Izgara benzeri alanlar, daha dayanıklı</td>
+          </tr>
+          <tr>
+            <td><strong>Minkowski</strong></td>
+            <td>d = (Σ|xᵢ − yᵢ|^p)^(1/p)</td>
+            <td>Genel form: p=2 → Euclidean, p=1 → Manhattan</td>
+          </tr>
+          <tr>
+            <td><strong>Chebyshev</strong></td>
+            <td>d = max(|xᵢ − yᵢ|)</td>
+            <td>Satranç hamleleri gibi uniform hareket</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-box">
+      Euclidean (2D): d = √[(x₂ − x₁)² + (y₂ − y₁)²]
+      <br><br>
+      Euclidean (nD): d = √[Σᵢ (xᵢ − yᵢ)²]
+    </div>
+
+    <h2 id="ornek">🧮 Hesaplama Örneği — Adım Adım (Nottan)</h2>
+
+    <p>Yeni nokta = (3, 3), k = 3. Hangi sınıfa giriyor?</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nokta</th><th>Çalışma Saati (x₁)</th><th>Deneme Puanı (x₂)</th><th>Sınıf</th><th>Euclidean d = √[(3-x)²+(3-y)²]</th><th>En Yakın 3?</th></tr></thead>
+        <tbody>
+          <tr><td>P1</td><td>1</td><td>1</td><td>B</td><td>√[(3-1)²+(3-1)²] = √8 = 2.83</td><td></td></tr>
+          <tr style="background:rgba(63,185,80,0.06)"><td>P2</td><td>2</td><td>1</td><td><strong>B</strong></td><td>√[(3-2)²+(3-1)²] = √5 = 2.24</td><td>✅ 2.</td></tr>
+          <tr style="background:rgba(63,185,80,0.1)"><td>P3</td><td>2</td><td>2</td><td><strong>B</strong></td><td>√[(3-2)²+(3-2)²] = √2 = 1.41</td><td>✅ 1. (EN YAKIN)</td></tr>
+          <tr style="background:rgba(63,185,80,0.06)"><td>P4</td><td>4</td><td>4</td><td><strong>A</strong></td><td>√[(3-4)²+(3-4)²] = √2 = 1.41</td><td>✅ 1. (eşit)</td></tr>
+          <tr><td>P5</td><td>5</td><td>4</td><td>A</td><td>√[(3-5)²+(3-4)²] = √5 = 2.24</td><td></td></tr>
+          <tr><td>P6</td><td>4</td><td>5</td><td>A</td><td>√[(3-4)²+(3-5)²] = √5 = 2.24</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>En yakın 3 komşu: <strong>P3 (B), P4 (A), P2 (B)</strong></p>
+    <p>Sınıf sayısı: B=2, A=1 → <strong>Çoğunluk B! → Yeni nokta B sınıfına girer.</strong></p>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Sınav: KNN Hesaplama Sorusu Formatı</div>
+        "Mevcut noktalar ve sınıfları verilir → Yeni nokta için k=3 veya k=5 ile sınıfı bul" → Her noktanın uzaklığını hesapla, en yakın k tanesini bul, çoğunluk sınıfı seç.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="knn-reg">🔄 KNN ile Regresyon</h2>
+
+    <p>KNN sadece sınıflandırma için değil, sürekli değer tahmini (regresyon) için de kullanılabilir.</p>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>KNN — Classification</h4>
+        <p style="font-size:13px">k komşunun <strong>çoğunluğuna ait sınıfı</strong> al → yeni noktanın sınıfını belirle.</p>
+        <p style="font-size:12px;color:var(--muted)">Çıktı: "Churn" ya da "No Churn"</p>
+      </div>
+      <div class="mini-card">
+        <h4>KNN — Regression</h4>
+        <p style="font-size:13px">k komşunun <strong>ortalamasını</strong> al → yeni noktanın değerini tahmin et.</p>
+        <p style="font-size:12px;color:var(--muted)">Çıktı: "Tahmin maaş: 5.400 TL"</p>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">KNN'de LogLoss Hesabı (Nottan)</div>
+        "KNN'de predict churn nasıl bulunur? (LogLoss için olasılık şekliyle)" — k=10 olsun. 10 komşunun değerlerine bakılır. (Churn=1 olanlar alınır). 9 tanesi 1, 1 tanesi 0 ise → 9/10 = 0.9 → Predicted churn = 0.9. 1 tanesi 1 ise → 1/10 = 0.1 → Predicted churn = 0.1.
+        Ortalama LogLoss için bulunan değerlerin ortalaması alınır.
+      </div>
+    </div>
+
+    <h2 id="normalizasyon-knn">⚠️ KNN'de Normalizasyon Neden Zorunlu?</h2>
+
+    <p>KNN mesafe hesapladığı için ölçek farklılıkları sonucu doğrudan etkiler:</p>
+
+    <div class="callout">
+      Düşün: Feature 1 = yaş (0-100), Feature 2 = maaş (0-50.000). Normalizasyon olmadan maaş farkı yaş farkını tamamen ezer. Euclidean mesafe sadece maaş tarafından domine edilir ve yaş bilgisi anlamsız hale gelir.
+    </div>
+
+    <p>Bu yüzden KNN, SVM, Logistic Regression gibi mesafe veya gradient bazlı algoritmalarda normalizasyon <strong>ZORUNLUDUR</strong>.</p>
+
+    <h2 id="logloss-knn">📉 LogLoss (Olasılıksal Değerlendirme)</h2>
+
+    <p>LogLoss, modelin tahminlerinin 0-1 arasındaki olasılık şekliyle ifadesidir. Küçük olması daha iyidir.</p>
+
+    <div class="formula-box">
+      LogLoss = −(1/n) · Σ[y · log(ŷ) + (1−y) · log(1−ŷ)]
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan — LogLoss Örneği</div>
+        <p>Churn değeri 1 olan biri için Predicted Churn = 0.91 → LogLoss = 0.11 (iyi) ✅</p>
+        <p>Churn değeri 1 olan biri için Predicted Churn = 0.13 → LogLoss = 2.4 (kötü) ❌</p>
+        <p>Churn değeri 0 olan biri için Predicted Churn = 0.04 → LogLoss = 0.04 (iyi) ✅</p>
+        <br>
+        "LogLoss ne zaman kullanılmalı? 0.49 ile 0.001 değerleri arasında fark olması iseniliyorsa LogLoss kullanılmalı (0-1 yerine olasılık kullanılacağı için)."
+      </div>
+    </div>
+
+    <h2 id="kod">💻 KNN Kod Örnekleri</h2>
+
+    <pre><code><span class="hl-kw">import</span> numpy <span class="hl-kw">as</span> np
+<span class="hl-kw">import</span> pandas <span class="hl-kw">as</span> pd
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> preprocessing
+<span class="hl-kw">from</span> sklearn.model_selection <span class="hl-kw">import</span> train_test_split
+<span class="hl-kw">from</span> sklearn.neighbors <span class="hl-kw">import</span> <span class="hl-cls">KNeighborsClassifier</span>
+<span class="hl-kw">from</span> sklearn <span class="hl-kw">import</span> metrics
+
+<span class="hl-cm"># ── 1. Veri Yükleme (Telecom Churn — 12 feature) ──</span>
+df = pd.read_csv(<span class="hl-str">'teleCust1000t.csv'</span>)
+df.head()
+df.columns       <span class="hl-cm"># Feature sayısını ver</span>
+df.shape         <span class="hl-cm"># Satır ve sütun sayısını ver</span>
+df[<span class="hl-str">'custcat'</span>].value_counts()  <span class="hl-cm"># Sadece ayrık veriler için — bağımlı değişken dağılımı</span>
+
+<span class="hl-cm"># ── 2. Feature ve Label Ayır ──</span>
+X = df.drop(<span class="hl-str">'custcat'</span>, axis=<span class="hl-num">1</span>).values   <span class="hl-cm"># Tüm featurelar</span>
+y = df[<span class="hl-str">'custcat'</span>].values               <span class="hl-cm"># Bağımlı değişken</span>
+
+<span class="hl-cm"># ── 3. Normalizasyon (KNN için ZORUNLU) ──</span>
+X = preprocessing.<span class="hl-cls">StandardScaler</span>().fit(X).transform(X.astype(float))
+
+<span class="hl-cm"># ── 4. Train/Test Split ──</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="hl-num">0.2</span>, random_state=<span class="hl-num">4</span>
+)
+
+<span class="hl-cm"># ── 5. En iyi K'yı bul ──</span>
+mean_acc = np.zeros((<span class="hl-num">9</span>,))
+<span class="hl-kw">for</span> n <span class="hl-kw">in</span> range(<span class="hl-num">1</span>, <span class="hl-num">10</span>):
+    neigh = <span class="hl-cls">KNeighborsClassifier</span>(n_neighbors=n).fit(X_train, y_train)
+    yhat  = neigh.predict(X_test)
+    mean_acc[n-<span class="hl-num">1</span>] = metrics.accuracy_score(y_test, yhat)
+
+print(<span class="hl-str">"En iyi Accuracy:"</span>, mean_acc.max())
+print(<span class="hl-str">"En iyi K:"</span>, mean_acc.argmax()+<span class="hl-num">1</span>)
+
+<span class="hl-cm"># ── 6. KNN Model Eğitimi ve Tahmin ──</span>
+k = <span class="hl-num">7</span>  <span class="hl-cm"># Bulunan en iyi k</span>
+neigh = <span class="hl-cls">KNeighborsClassifier</span>(n_neighbors=k).fit(X_train, y_train)
+yhat  = neigh.predict(X_test)
+
+<span class="hl-cm"># ── 7. Değerlendirme ──</span>
+print(<span class="hl-str">"Train Accuracy:"</span>, metrics.accuracy_score(y_train, neigh.predict(X_train)))
+print(<span class="hl-str">"Test Accuracy:"</span>,  metrics.accuracy_score(y_test, yhat))
+
+<span class="hl-cm"># KNN Regression için:</span>
+<span class="hl-kw">from</span> sklearn.neighbors <span class="hl-kw">import</span> <span class="hl-cls">KNeighborsRegressor</span>
+knn_reg = <span class="hl-cls">KNeighborsRegressor</span>(n_neighbors=<span class="hl-num">3</span>)
+knn_reg.fit(X_train, y_train)
+</code></pre>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bölüm 4 Sınav Özeti</div>
+        <ul>
+          <li>Classification → ayrık çıktı, Regression → sürekli çıktı</li>
+          <li>KNN = en yakın k komşuya bak → çoğunluk sınıfı (Classification) veya ortalama (Regression)</li>
+          <li>K değeri for döngüsü ile denenerek seçilir</li>
+          <li>Euclidean mesafe: d = √[Σ(xᵢ-yᵢ)²]</li>
+          <li>KNN'de model eğitimi YOKTUR → Tüm veri hafızada tutulur</li>
+          <li>KNN için normalizasyon ZORUNLU (KNN, SVM, Logistic Regression)</li>
+          <li>LogLoss: 0-1 olasılık değeri, küçük olması iyidir</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b3_regresyon.html">← Bölüm 3</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="b5_metrikler.html">Bölüm 5: Metrikler →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

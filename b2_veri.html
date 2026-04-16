@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bölüm 2 · Veri Ön İşleme — Örüntü Tanıma</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 Örüntü Tanıma</div>
+  <a href="index.html">Ana Sayfa</a>
+  <a href="b1_temeller.html">1 · Temeller</a>
+  <a href="b2_veri.html" class="active">2 · Veri İşleme</a>
+  <a href="b3_regresyon.html">3 · Regresyon</a>
+  <a href="b4_knn.html">4 · KNN</a>
+  <a href="b5_metrikler.html">5 · Metrikler</a>
+  <a href="b6_dtree.html">6 · Decision Tree</a>
+  <a href="b7_wavelet.html">7 · Wavelet</a>
+  <a href="b8_kod.html">8 · Kod</a>
+  <a href="sinav.html">🎯 Sınav</a>
+  <a href="sorular.html">📝 Sorular</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-badge">🧹 Bölüm 2 · 2. Hafta · 25/02 & 04/03/2026</div>
+  <h1>Veri Temizleme &amp; Normalizasyon</h1>
+  <p class="subtitle">Missing data çözümleri, Noise vs Outlier farkı, 3 outlier tespit yöntemi (Regresyon, Clustering, Quantile-Plot), IQR adım adım hesaplama ve Z-score / Min-Max normalizasyonu.</p>
+  <div class="meta">
+    <div class="meta-item">📄 Kaynak: <span>21.51.21(7-8) · 21.51.31(2) · 21.51.32</span></div>
+    <div class="meta-item">⏱ Okuma: <span>~30 dk</span></div>
+    <div class="meta-item">🎯 Sınav: <span>🔴 Çok Önemli – IQR hesaplama, Z-score 4 satır kod</span></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Bu Bölümde</div>
+    <a href="#missing">Missing Data</a>
+    <a href="#noise">Noise vs Outlier</a>
+    <a href="#outlier-yontem">3 Outlier Tespit Yöntemi</a>
+    <a href="#iqr">IQR Yöntemi (Adım Adım)</a>
+    <a href="#quantile">Quantile-Plot (Q-Q)</a>
+    <a href="#normalizasyon">Normalizasyon</a>
+    <a href="#minmax">Min-Max</a>
+    <a href="#zscore">Z-Score Kodu (SINAV!)</a>
+    <a href="#pandas">Pandas Komutları</a>
+  </aside>
+
+  <main class="content">
+
+    <h2 id="missing">❓ Missing Data (Eksik Veri)</h2>
+    <p>
+      Gerçek hayatta veri seti temiz gelmez. Eksik hücrelere sahip verilere <strong>missing data</strong> (boş veri) denir.
+      Bu durum modelin başarısını düşürür.
+    </p>
+
+    <div class="callout">
+      Örnek: Kişiye ait yaş bilgisinin olmaması. f1, f2, f3 sütunlarından biri boşsa (□) bu bir missing data örneğidir.
+      Satırlar → Data Object (örnek, sample) | Sütunlar → Feature (özellik, sınıf)
+    </div>
+
+    <h3>Missing Data Çözüm Yöntemleri (4 Tane — Hepsini Bil!)</h3>
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>İlgili satırı tamamen kaldırma</strong>
+          <span class="badge badge-red">En kötü yöntem</span><br/>
+          Veri çok önemlidir, silmek iyi bir çözüm değildir.
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Sütunun ortalamasını alıp boş hücreye yazma</strong><br/>
+          Basit ve yaygın. Genel ortalama kullanılır.
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Aynı class'a ait örneklerin ortalamasını alıp boş hücreye yazma</strong>
+          <span class="badge badge-green">Daha iyi!</span><br/>
+          Sadece aynı class'taki tabloleri kullan. Örn: Yaş 0-10 → Class 1, 10-20 → Class 2, 20-30 → Class 3.
+          Her class'ın yaş ortalaması ayrı ayrı hesaplanır → böylece daha doğru değer elde edilir.
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Decision Tree ve farklı istatistiksel yöntemler kullanma</strong><br/>
+          En gelişmiş yöntemdir.
+        </div>
+      </li>
+    </ol>
+
+    <hr/>
+
+    <h2 id="noise">🔊 Noise vs Outlier — Çok Önemli Fark!</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kavram</th><th>Tanım</th><th>Örnek</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Noise (Gürültü)</strong></td>
+            <td>Rastgele oluşan, <strong>gerçek olmayan</strong> veri. Modelin doğruluğunu artırır.</td>
+            <td>Maaşın −3 olması <strong>imkânsız</strong> → Bu noise</td>
+          </tr>
+          <tr>
+            <td><strong>Outlier (Aykırı değer)</strong></td>
+            <td>Gerçek bir değer, ama diğerlerinden <strong>çok farklı</strong>. Gerçek ama sıradışı uç değer.</td>
+            <td>Herkesin maaşı 5000-10000 TL iken birinin 200.000 TL olması</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Özet</div>
+        Noise → İmkânsız veri (rastgele hata, gerçek değil) | Outlier → Gerçek ama çok farklı uç değer.<br/>
+        Normalizasyon yöntemleri: Min-Max ve Z-score (StandardScaler)
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="outlier-yontem">🔎 3 Outlier Tespit Yöntemi (Sınavda Sorulur!)</h2>
+    <p>Notlara göre outlier tespit için 3 yöntem vardır (6. haftada işlendi):</p>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>1) Regresyon ile Outlier Bulma</h4>
+        <p style="font-size:13px">Veri noktasının regresyon çizgisine olan <strong>mesafesi çok uzunsa</strong> → o nokta outlier sayılır. Regresyon doğrusundan uzaklaşan her nokta şüphelidir.</p>
+      </div>
+      <div class="mini-card">
+        <h4>2) Clustering ile Outlier Bulma</h4>
+        <p style="font-size:13px"><strong>Hiçbir kümeye benzemeyen nokta</strong> outlier'dır. K-means ile kümeleme yapılır, hiçbir kümeye giremeyen nokta isolated olarak işaretlenir.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body">
+        <div class="alert-title">3) Quantile-Plot (Q-Q Plot) — Sınavda Çıkabilir!</div>
+        Veri sıralı olmalıdır. Q1, Q2, Q3 değerleri bulunur → IQR hesaplanır → Alt ve üst sınır belirlenir → Sınır dışına çıkanlar outlier'dır.
+        Bu yöntem "<strong>Quantile-plot yöntemiyle outlier bulma</strong>" olarak bilinir.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="iqr">📐 IQR Yöntemi — Adım Adım Hesaplama</h2>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">SINAV SORUSU — Bu hesaplamayı adım adım yapabilmelisin!</div>
+        Sınavda veri seti verilip "outlier'ı bulun" denilebilir. IQR yöntemini adımları ile göster.
+      </div>
+    </div>
+
+    <p>Örnek veri seti (sıralı): <code>{4, 5, 7, 8, 9, 10, 12, 13, 15, 30}</code></p>
+
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Q2 (Medyan) Bul</strong><br/>
+          10 eleman var → ortadaki 2 değer: 9 ve 10<br/>
+          <div class="formula-box">Q2 = (9 + 10) / 2 = 9.5</div>
+          <small style="color:var(--muted)">Medyan = sıralı bir veri setindeki orta değeri. Çift sayıda veri varsa ortadaki iki sayının ortalaması. df.describe() → %50 satırında görünür.</small>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Q1 (Alt Çeyrek) Bul — Verilerin %25'i</strong><br/>
+          Q2'den küçük sayılar: {4, 5, 7, 8, 9}<br/>
+          Bu 5 elemanın medyanı:
+          <div class="formula-box">Q1 = 7</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Q3 (Üst Çeyrek) Bul — Verilerin %75'i</strong><br/>
+          Q2'den büyük sayılar: {10, 12, 13, 15, 30}<br/>
+          Bu 5 elemanın medyanı:
+          <div class="formula-box">Q3 = 13</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>IQR Hesapla</strong>
+          <div class="formula-box">IQR = Q3 − Q1 = 13 − 7 = 6</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Alt ve Üst Sınırları Hesapla</strong>
+          <div class="formula-box">
+            Alt Sınır = Q1 − 1.5 × IQR = 7 − (1.5 × 6) = 7 − 9 = <strong>−2</strong><br/>
+            Üst Sınır = Q3 + 1.5 × IQR = 13 + (1.5 × 6) = 13 + 9 = <strong>22</strong>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Outlier'ları Tespit Et</strong><br/>
+          −2'den küçük veri yok → Alt sınırda outlier yok<br/>
+          22'den büyük veri: <strong>30</strong> → <span style="color:var(--red-light)">30 OUTLIER! Atılır.</span><br/>
+          <small style="color:var(--muted)">Veri setinde: −2'den küçük veri yok (outlier yok) | 22'den büyük → 30 → outlier olduğundan atılır.</small>
+        </div>
+      </li>
+    </ol>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">df.describe() Çıktısı</div>
+        min=4, max=30, Q1=7, Q2(50%)=9.5, Q3=13 — Bu 5 değeri veri setinin özeti olarak verir.
+        <strong>Quantile-plot'ta kullanılan veri seti sıralı olmalıdır!</strong>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="quantile">📊 Quantile-Plot Detayı</h2>
+    <ul>
+      <li>Q1 → Verinin %25'i bu değerin altındadır</li>
+      <li>Q2 → Verinin %50'si bu değerin altındadır (Medyan)</li>
+      <li>Q3 → Verinin %75'i bu değerin altındadır</li>
+      <li>Çizginin dışına çıkan noktalar → <strong>Outlier adayı</strong></li>
+    </ul>
+    <p>
+      <strong>Medyan (Medyandan küçük):</strong> Medyandan küçük sayılar alınıp bunların medyanı bulunarak Q1 elde edilir.<br/>
+      <strong>Medyan (Medyandan büyük):</strong> Medyandan büyük sayılar alınıp bunların medyanı bulunarak Q3 elde edilir.
+    </p>
+
+    <hr/>
+
+    <h2 id="normalizasyon">⚖️ Normalizasyon (Ölçekleme / Scaling)</h2>
+    <p>Farklı ölçeklerdeki verileri <strong>aynı aralığa getirme</strong> işlemidir. KNN, SVM, Logistic Regression gibi modellerde <strong>zorunludur</strong>.</p>
+
+    <div class="callout">
+      Neden normalizasyon şart? Yaş (0-100) ve maaş (0-100000) varsa, maaş feature'ı distance hesaplamalarını domine eder. Normalizasyon ile hepsini aynı ölçeğe getiririz.
+    </div>
+
+    <div class="grid2">
+      <div class="mini-card">
+        <h4>Min-Max Normalizasyonu</h4>
+        <p style="font-size:13px">Tüm değerleri <strong>0 ile 1 arasına</strong> taşır.</p>
+      </div>
+      <div class="mini-card">
+        <h4>Z-Score Normalizasyonu</h4>
+        <p style="font-size:13px">Ortalama = 0, Standart Sapma = 1'e getirir.</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="minmax">📏 Min-Max Normalizasyonu</h2>
+    <div class="formula-box">x' = (x − min) / (max − min)</div>
+    <p>Tüm değerleri <strong>0 ile 1 arasına</strong> taşır.</p>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Örnek</div>
+        x=10, min=1, max=10: x' = (10−1)/(10−1) = <strong>1.0</strong><br/>
+        x=1, min=1, max=10: x' = (1−1)/(10−1) = <strong>0.0</strong><br/>
+        Örn: 1/10 = 0.1, 10/10 = 1.0 → 0 ile 1 arasına normalize edildi.
+      </div>
+    </div>
+
+    <hr/>
+
+    <h2 id="zscore">📐 Z-Score Normalizasyonu — 4 Satır Kod (SINAV!)</h2>
+    <div class="formula-box">Z = (x − μ) / σ &nbsp;&nbsp;&nbsp; (μ = ortalama, σ = standart sapma)</div>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bu 4 satırı ezbere bil — Sınavda boşluk doldurma sorusu olarak çıkar!</div>
+        Sınavda "2. satırda ne yapılıyor?" diye sorulabilir → Cevap: Z-score normalizasyonu yapılıyor!
+      </div>
+    </div>
+
+    <pre><code><span class="hl-cm"># 1: Normalizasyon öncesini göster</span>
+print(X[<span class="hl-num">0</span>:<span class="hl-num">5</span>])
+
+<span class="hl-cm"># 2: StandardScaler oluştur ve fit et → Z-score normalizasyonu yapılıyor!</span>
+scaler = preprocessing.<span class="hl-cls">StandardScaler</span>()
+scaler.fit(X)
+
+<span class="hl-cm"># 3: Transform et (float'a çevirerek)</span>
+X = scaler.transform(X.astype(float))
+
+<span class="hl-cm"># 4: Normalizasyon sonrasını göster</span>
+print(X[<span class="hl-num">0</span>:<span class="hl-num">5</span>])</code></pre>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">📌</div>
+      <div class="alert-body">
+        <div class="alert-title">Nottan Ek Bilgi</div>
+        <p>Normalizasyon için şu import yapılır: <code>from sklearn import preprocessing</code></p>
+        <p><strong>2→0.3, 3→0.31, 5→... , 7→...</strong> şeklinde tuple'a yerleştirilir (fit işlemi için tutulur).</p>
+        <p>Genel olarak <strong>−3 ile +3 arasında</strong> normalizasyon yapılır.</p>
+        <p><strong>3. satırdaki transform işlemi:</strong> Veriler float sayılara dönüştürülür. Bu adımda veri dönüşüm gerçekleşir.</p>
+      </div>
+    </div>
+
+    <h3>random_state=4 Ne Demek?</h3>
+    <p>Her çalıştırmada aynı verilerin seçilmesini sağlar → tekrarlanabilir sonuçlar elde edilir.</p>
+    <pre><code>X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="hl-num">0.2</span>, random_state=<span class="hl-num">4</span>
+)</code></pre>
+
+    <hr/>
+
+    <h2 id="pandas">🐼 Pandas Komutları (Sınavda Sorulabilir)</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Komut</th><th>Ne Yapar?</th><th>Not</th></tr></thead>
+        <tbody>
+          <tr><td><code>df.head()</code></td><td>İlk 5 satırı göster</td><td>Veri yapısını anlamak için</td></tr>
+          <tr><td><code>df.describe()</code></td><td>İstatistiksel özet: min, max, mean, std, Q1, Q2, Q3</td><td>Outlier tespitinde çok kullanışlı</td></tr>
+          <tr><td><code>df.columns</code></td><td>Feature (sütun) isimlerini verir</td><td>Sütun sayısı = feature sayısı</td></tr>
+          <tr><td><code>df.shape</code></td><td>Satır ve sütun sayısını verir</td><td>(n_samples, n_features)</td></tr>
+          <tr><td><code>df['col'].value_counts()</code></td><td>Bağımlı değişkenin dağılımını ver</td><td>Sadece ayrık (discrete) verilerde kullanılır</td></tr>
+          <tr><td><code>df.dtypes</code></td><td>Her sütunun veri tipini göster (sütun özelliği)</td><td>std=0 → tüm araba modelleri 2014 yılından</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-exam">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">Bölüm 2 Sınav Özeti</div>
+        <ul>
+          <li><strong>IQR = Q3 − Q1</strong>, Alt Sınır = Q1 − 1.5×IQR, Üst Sınır = Q3 + 1.5×IQR</li>
+          <li>Outlier = Gerçek ama uç değer | Noise = İmkânsız veri (rastgele hata)</li>
+          <li>Missing data: En kötü → satırı sil | En iyi → aynı class ortalaması</li>
+          <li>3 outlier tespit yöntemi: Regresyon, Clustering, Quantile-Plot</li>
+          <li>Z-score 4 satır: print → StandardScaler → fit → transform → print</li>
+          <li>KNN, SVM, Logistic Regression → <strong>normalizasyon zorunlu</strong></li>
+          <li>Quantile-plot → veri sıralı olmalıdır | df.describe() → 5 değer verir</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer" style="margin-top:48px">
+      <a href="b1_temeller.html">← Bölüm 1</a>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="b3_regresyon.html">Bölüm 3: Regresyon →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>
